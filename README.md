@@ -137,12 +137,6 @@ yt-dlp>=2024.3.10
 
 ---
 
-## 🪪 License
-
-MIT License  
-(c) 2025 ClipMind Contributors
-
----
 
 ## 🤝 貢献方法
 
