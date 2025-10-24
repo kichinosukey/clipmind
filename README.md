@@ -114,6 +114,13 @@ source "$CLIPMIND_HOME/.venv/bin/activate"
 python -m clipmind.pipeline "$URL" > /tmp/clipmind.log 2>&1
 osascript -e 'display notification "処理が完了しました" with title "ClipMind"'
 ```
+### Alfred Workflow（macOS専用）
+
+ワンクリックで実行したい場合は、こちらから最新の **Alfred Workflow リリース** をダウンロードしてください 👇
+👉 [ClipMind リリースページ（GitHub）](https://github.com/kichinosukey/clipmind/releases)
+
+インストール後、Alfredで次のように入力します：
+
 
 ---
 
