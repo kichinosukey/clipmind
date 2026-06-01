@@ -1,0 +1,16 @@
+#!/bin/zsh
+set -euo pipefail
+
+SCRIPT_DIR="${0:A:h}"
+cd "$SCRIPT_DIR"
+
+if [[ -x "$SCRIPT_DIR/.venv/bin/python" ]]; then
+  exec "$SCRIPT_DIR/.venv/bin/python" -m clipmind.repair "$@"
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  exec python3 -m clipmind.repair "$@"
+fi
+
+echo "python3 が見つかりません。ClipMind repair を実行できません。" >&2
+exit 1

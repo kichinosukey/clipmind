@@ -1,0 +1,14 @@
+#!/bin/zsh
+set -euo pipefail
+
+SCRIPT_DIR="${0:A:h}"
+PYTHON_BIN="$SCRIPT_DIR/.venv/bin/python"
+
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  echo "ClipMind の仮想環境が見つかりません: $PYTHON_BIN" >&2
+  echo "リポジトリ移動後は .venv を再作成してください。" >&2
+  exit 1
+fi
+
+cd "$SCRIPT_DIR"
+exec "$PYTHON_BIN" -m clipmind.pipeline "$@"

@@ -1,0 +1,9 @@
+{
+  "name": "com.clipmind.host",
+  "description": "clipmind Native Messaging Host",
+  "path": "/PLACEHOLDER/native-host/clipmind_host.py",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://PLACEHOLDER_EXTENSION_ID/"
+  ]
+}
