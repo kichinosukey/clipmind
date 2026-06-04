@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "activePresetId": "quality",
+  "presets": [
+    {
+      "id": "quality",
+      "name": "Quality",
+      "baseURL": "http://localhost:1234/v1",
+      "model": "model-a",
+      "apiKeyRef": "quality-api",
+      "summarizeSystemPrompt": "summarize system",
+      "summarizeUserPrompt": "summary {text}",
+      "translateSystemPrompt": "translate system",
+      "translateUserPrompt": "translate {text}"
+    }
+  ],
+  "shared": {
+    "whisperBinaryPath": "/opt/homebrew/bin/whisper-cli",
+    "whisperModelPath": "/models/base.bin",
+    "outputRoot": "/tmp/clipmind-output",
+    "enabledDestinations": ["discord"],
+    "discordWebhookRef": "discord-hook",
+    "slackWebhookRef": null
+  }
+}
