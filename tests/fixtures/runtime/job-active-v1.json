@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "jobId": "active-job",
+  "sourceURL": "https://youtu.be/active",
+  "title": "Active Video",
+  "stage": "transcribing_with_whisper",
+  "startedAt": "2026-06-04T00:00:00+00:00",
+  "updatedAt": "2026-06-04T00:01:00+00:00"
+}

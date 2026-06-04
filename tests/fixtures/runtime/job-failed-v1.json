@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "jobId": "failed-job",
+  "sourceURL": "https://youtu.be/failed",
+  "title": "Failed Video",
+  "stage": "failed",
+  "startedAt": "2026-06-04T00:00:00+00:00",
+  "updatedAt": "2026-06-04T00:02:00+00:00",
+  "completedAt": "2026-06-04T00:02:00+00:00",
+  "failedStage": "summarizing",
+  "errorSummary": "API unavailable",
+  "deliveryResults": {}
+}

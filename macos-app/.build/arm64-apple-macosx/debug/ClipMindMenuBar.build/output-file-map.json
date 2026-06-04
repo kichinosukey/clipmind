@@ -1,0 +1,103 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/master.swiftdeps"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/ClipMindMenuBarApp.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindMenuBarApp.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindMenuBarApp.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindMenuBarApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindMenuBarApp.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindMenuBarApp.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Models/ClipMindConfig.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindConfig.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindConfig.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindConfig~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindConfig.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ClipMindConfig.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Models/JobStatus.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobStatus.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobStatus.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobStatus~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobStatus.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobStatus.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Services/ConfigStore.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ConfigStore.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ConfigStore.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ConfigStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ConfigStore.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ConfigStore.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Services/JobMonitor.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobMonitor.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobMonitor.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobMonitor~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobMonitor.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/JobMonitor.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Services/KeychainStore.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/KeychainStore.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/KeychainStore.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/KeychainStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/KeychainStore.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/KeychainStore.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Services/ModelDiscoveryClient.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ModelDiscoveryClient.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ModelDiscoveryClient.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ModelDiscoveryClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ModelDiscoveryClient.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/ModelDiscoveryClient.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Services/RuntimePaths.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/RuntimePaths.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/RuntimePaths.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/RuntimePaths~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/RuntimePaths.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/RuntimePaths.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/ViewModels/SettingsViewModel.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsViewModel.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsViewModel.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsViewModel~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsViewModel.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsViewModel.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Views/MenuContentView.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/MenuContentView.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/MenuContentView.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/MenuContentView~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/MenuContentView.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/MenuContentView.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Views/PresetEditorView.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/PresetEditorView.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/PresetEditorView.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/PresetEditorView~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/PresetEditorView.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/PresetEditorView.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Views/SettingsView.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsView.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsView.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SettingsView.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Views/SharedSettingsView.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SharedSettingsView.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SharedSettingsView.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SharedSettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SharedSettingsView.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/SharedSettingsView.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Sources/ClipMindMenuBar/Views/StatusView.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/StatusView.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/StatusView.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/StatusView~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/StatusView.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBar.build/StatusView.dia"
+  }
+}

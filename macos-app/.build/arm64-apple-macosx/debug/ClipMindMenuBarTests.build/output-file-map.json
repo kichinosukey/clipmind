@@ -1,0 +1,19 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/master.swiftdeps"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Tests/ClipMindMenuBarTests/ConfigStoreTests.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/ConfigStoreTests.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/ConfigStoreTests.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/ConfigStoreTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/ConfigStoreTests.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/ConfigStoreTests.dia"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/Tests/ClipMindMenuBarTests/SharedContractTests.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/SharedContractTests.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/SharedContractTests.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/SharedContractTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/SharedContractTests.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarTests.build/SharedContractTests.dia"
+  }
+}

@@ -1,0 +1,15 @@
+import SwiftUI
+
+struct SettingsView: View {
+    @EnvironmentObject var jobs: JobMonitor
+    @EnvironmentObject var settings: SettingsViewModel
+
+    var body: some View {
+        TabView {
+            PresetEditorView().tabItem { Label("Presets", systemImage: "slider.horizontal.3") }
+            SharedSettingsView().tabItem { Label("Shared", systemImage: "gearshape") }
+            StatusView().tabItem { Label("Status", systemImage: "waveform.path.ecg") }
+        }
+        .frame(minWidth: 680, minHeight: 520)
+    }
+}

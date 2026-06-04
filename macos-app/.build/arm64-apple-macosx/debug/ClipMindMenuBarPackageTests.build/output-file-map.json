@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarPackageTests.build/master.swiftdeps"
+  },
+  "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarPackageTests.build/runner.d",
+    "object": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/kichinosukey-mba/projects/clipmind/.worktrees/clipmind-menu-bar/macos-app/.build/arm64-apple-macosx/debug/ClipMindMenuBarPackageTests.build/runner.dia"
+  }
+}

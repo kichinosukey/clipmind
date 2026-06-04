@@ -2,14 +2,25 @@
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
 from clipmind.jobs import InvalidTransition, JobStage, JobStatusStore
 
+FIXTURES = Path(__file__).parents[1] / "fixtures" / "runtime"
+
 
 def read_job(path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_shared_job_fixtures_follow_python_contract():
+    active = read_job(FIXTURES / "job-active-v1.json")
+    failed = read_job(FIXTURES / "job-failed-v1.json")
+    assert JobStage(active["stage"]) is JobStage.TRANSCRIBING_WITH_WHISPER
+    assert JobStage(failed["stage"]) is JobStage.FAILED
+    assert failed["failedStage"] == JobStage.SUMMARIZING.value
 
 
 def test_job_store_writes_progress_atomically(tmp_path):
