@@ -1,110 +1,49 @@
 """Tests for clipmind.summarizer.summarize_text()."""
 
+from dataclasses import replace
+
 import pytest
+
+from clipmind.summarizer import summarize_text
 
 
 class TestSummarizeText:
-    def test_summarize_returns_content(self, mocker, mock_openai_client):
-        """mode='summarize' returns the LLM response content."""
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
-
-        from clipmind.summarizer import summarize_text
-
-        result = summarize_text("Some transcript text", mode="summarize")
-        assert result == "Mocked summary output"
-
-    def test_translate_returns_content(self, mocker, mock_openai_client):
-        """mode='translate' returns the LLM response content."""
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
-
-        from clipmind.summarizer import summarize_text
-
-        result = summarize_text("Some summary text", mode="translate")
-        assert result == "Mocked summary output"
-
-    def test_empty_input_raises(self):
-        """Empty string input raises ValueError."""
-        from clipmind.summarizer import summarize_text
-
-        with pytest.raises(ValueError, match="empty"):
-            summarize_text("   ")
-
-    def test_unsupported_mode_exits(self, mocker, mock_openai_client):
-        """Unsupported mode raises SystemExit via handle_error."""
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
-
-        from clipmind.summarizer import summarize_text
-
-        with pytest.raises(SystemExit):
-            summarize_text("Some text", mode="invalid_mode")
-
-    def test_prompt_template_substitution(self, mocker, mock_openai_client):
-        """{text} placeholder is replaced with actual input text."""
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
-
-        from clipmind.summarizer import summarize_text
-
-        _, mock_client = mock_openai_client
-        summarize_text("MY_UNIQUE_TEXT", mode="summarize")
-
-        call_args = mock_client.chat.completions.create.call_args
-        messages = call_args.kwargs["messages"]
-        user_msg = messages[1]["content"]
-        assert "MY_UNIQUE_TEXT" in user_msg
-
-    def test_template_fallback(self, mocker, mock_openai_client):
-        """Malformed template falls back to appending text with \\n\\n."""
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
-        # Use a template that will fail .format() — contains unmatched braces
-        mocker.patch(
-            "clipmind.summarizer.USER_PROMPTS",
-            {"summarize": "Bad template {unknown_key}", "translate": "ok {text}"},
+    @pytest.mark.parametrize("mode", ["summarize", "translate"])
+    def test_returns_content(self, mode, llm_preset, mock_openai_client):
+        assert summarize_text("Some text", mode=mode, preset=llm_preset) == (
+            "Mocked summary output"
         )
 
-        from clipmind.summarizer import summarize_text
+    def test_empty_input_raises(self, llm_preset):
+        with pytest.raises(ValueError, match="empty"):
+            summarize_text("   ", mode="summarize", preset=llm_preset)
 
-        _, mock_client = mock_openai_client
-        summarize_text("fallback input", mode="summarize")
+    def test_unsupported_mode_raises(self, llm_preset, mock_openai_client):
+        with pytest.raises(ValueError, match="Unsupported"):
+            summarize_text("Some text", mode="invalid", preset=llm_preset)
 
-        call_args = mock_client.chat.completions.create.call_args
-        user_msg = call_args.kwargs["messages"][1]["content"]
-        assert "fallback input" in user_msg
+    def test_prompt_template_substitution(self, llm_preset, mock_openai_client):
+        _, client = mock_openai_client
+        summarize_text("MY_UNIQUE_TEXT", mode="summarize", preset=llm_preset)
+        messages = client.chat.completions.create.call_args.kwargs["messages"]
+        assert "MY_UNIQUE_TEXT" in messages[1]["content"]
 
-    def test_api_error_exits(self, mocker, mock_openai_client):
-        """API exception causes SystemExit via handle_error."""
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
+    def test_template_fallback(self, llm_preset, mock_openai_client):
+        preset = replace(llm_preset, summarize_user_prompt="Bad {unknown_key}")
+        _, client = mock_openai_client
+        summarize_text("fallback input", mode="summarize", preset=preset)
+        messages = client.chat.completions.create.call_args.kwargs["messages"]
+        assert "fallback input" in messages[1]["content"]
 
-        _, mock_client = mock_openai_client
-        mock_client.chat.completions.create.side_effect = RuntimeError("API down")
+    def test_api_error_raises_original_exception(self, llm_preset, mock_openai_client):
+        _, client = mock_openai_client
+        client.chat.completions.create.side_effect = RuntimeError("API down")
+        with pytest.raises(RuntimeError, match="API down"):
+            summarize_text("Some text", mode="summarize", preset=llm_preset)
 
-        from clipmind.summarizer import summarize_text
-
-        with pytest.raises(SystemExit):
-            summarize_text("Some text", mode="summarize")
-
-    def test_temperature_and_model(self, mocker, mock_openai_client):
-        """temperature=0.3 and MODEL are passed to the API call."""
-        mocker.patch("clipmind.summarizer.MODEL", "test-model-123")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
-
-        from clipmind.summarizer import summarize_text
-
-        _, mock_client = mock_openai_client
-        summarize_text("Some text", mode="summarize")
-
-        call_args = mock_client.chat.completions.create.call_args
-        assert call_args.kwargs["model"] == "test-model-123"
-        assert call_args.kwargs["temperature"] == 0.3
+    def test_temperature_model_and_connection(self, llm_preset, mock_openai_client):
+        _, client = mock_openai_client
+        summarize_text("Some text", mode="summarize", preset=llm_preset)
+        call = client.chat.completions.create.call_args
+        assert call.kwargs["model"] == "test-model"
+        assert call.kwargs["temperature"] == 0.3

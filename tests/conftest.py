@@ -5,6 +5,8 @@ import os
 
 import pytest
 
+from clipmind.config import LLMPreset, RuntimeConfig
+
 
 @pytest.fixture
 def mock_env(monkeypatch):
@@ -59,3 +61,31 @@ def mock_openai_client(mocker):
 
     mock_cls = mocker.patch("clipmind.summarizer.OpenAI", return_value=mock_client)
     return mock_cls, mock_client
+
+
+@pytest.fixture
+def llm_preset():
+    return LLMPreset(
+        id="test",
+        name="Test",
+        base_url="http://test:1234/v1",
+        model="test-model",
+        api_key="test-key",
+        summarize_system_prompt="summarize system",
+        summarize_user_prompt="summarize {text}",
+        translate_system_prompt="translate system",
+        translate_user_prompt="translate {text}",
+    )
+
+
+@pytest.fixture
+def runtime_config(llm_preset, tmp_path):
+    return RuntimeConfig(
+        preset=llm_preset,
+        whisper_binary_path="/usr/bin/whisper-cli",
+        whisper_model_path="/models/base.bin",
+        output_root=str(tmp_path),
+        default_destinations=("discord",),
+        discord_webhook="https://discord.test/hook",
+        slack_webhook=None,
+    )

@@ -12,17 +12,10 @@ Summarizer module for YouTube transcripts.
 """
 
 from openai import OpenAI
-import os, sys, argparse
-from clipmind.paths import load_project_dotenv
+import os, argparse
+from clipmind.config import LLMPreset, load_runtime_config
 from clipmind.utils.log import log
 from clipmind.utils.error import handle_error
-
-# ==== .env読込 ====
-load_project_dotenv()
-
-BASE_URL = os.getenv("BASE_URL", "http://localhost:1234/v1")
-API_KEY = os.getenv("API_KEY", "not-needed")
-MODEL = os.getenv("MODEL", "openai/gpt-oss-20b")
 
 DEFAULT_SYSTEM_SUMMARIZE_PROMPT = """
 You are a friend explaining a video you just watched to another adult over coffee.
@@ -79,27 +72,16 @@ Summary:
 {text}
 """.strip()
 
-PROMPTS = {
-    "summarize": os.getenv("PROMPT_SUMMARIZE", DEFAULT_SYSTEM_SUMMARIZE_PROMPT),
-    "translate": os.getenv("PROMPT_TRANSLATE", DEFAULT_SYSTEM_TRANSLATE_PROMPT),
-}
-
-USER_PROMPTS = {
-    "summarize": os.getenv("USER_PROMPT_SUMMARIZE", DEFAULT_USER_SUMMARIZE_PROMPT),
-    "translate": os.getenv("USER_PROMPT_TRANSLATE", DEFAULT_USER_TRANSLATE_PROMPT),
-}
-
-
 # ======================================================
 #  ライブラリモード: パイプラインから直接呼ぶ用
 # ======================================================
 MAX_CHUNK_CHARS = 8000  # ~2000 tokens — safe for 4096 n_ctx with prompt overhead
 
 
-def _call_llm(client: OpenAI, system_prompt: str, user_prompt: str) -> str:
+def _call_llm(client: OpenAI, model: str, system_prompt: str, user_prompt: str) -> str:
     """Single LLM call. Raises on failure."""
     response = client.chat.completions.create(
-        model=MODEL,
+        model=model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
@@ -129,7 +111,7 @@ def _split_text(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
     return chunks
 
 
-def summarize_text(text: str, mode: str = "summarize") -> str:
+def summarize_text(text: str, mode: str, preset: LLMPreset) -> str:
     """
     Summarize or translate given text content.
     Long texts are automatically split into chunks and summarized,
@@ -145,66 +127,67 @@ def summarize_text(text: str, mode: str = "summarize") -> str:
     if not text.strip():
         raise ValueError("Input text is empty.")
 
-    try:
-        client = OpenAI(base_url=BASE_URL, api_key=API_KEY)
-        log(f"[summarizer] mode={mode}, model={MODEL}")
+    client = OpenAI(base_url=preset.base_url, api_key=preset.api_key)
+    log(f"[summarizer] mode={mode}, model={preset.model}")
 
-        if mode not in PROMPTS:
-            raise ValueError(f"Unsupported mode: {mode}")
+    prompts = {
+        "summarize": (
+            preset.summarize_system_prompt,
+            preset.summarize_user_prompt,
+        ),
+        "translate": (
+            preset.translate_system_prompt,
+            preset.translate_user_prompt,
+        ),
+    }
+    if mode not in prompts:
+        raise ValueError(f"Unsupported mode: {mode}")
+    system_prompt, user_prompt_template = prompts[mode]
 
-        system_prompt = PROMPTS[mode]
-        user_prompt_template = USER_PROMPTS[mode]
+    chunks = _split_text(text)
+    log(f"[summarizer] text length={len(text)}, chunks={len(chunks)}")
 
-        chunks = _split_text(text)
-        log(f"[summarizer] text length={len(text)}, chunks={len(chunks)}")
+    if len(chunks) <= 1:
+        try:
+            user_prompt = user_prompt_template.format(text=text)
+        except Exception:
+            user_prompt = f"{user_prompt_template}\n\n{text}"
 
-        if len(chunks) <= 1:
-            # Short text — single call
-            try:
-                user_prompt = user_prompt_template.format(text=text)
-            except Exception:
-                user_prompt = f"{user_prompt_template}\n\n{text}"
-
-            output = _call_llm(client, system_prompt, user_prompt)
-            log(f"[summarizer] output length={len(output)}")
-            return output
-
-        # Long text — summarize each chunk, then merge
-        log(f"[summarizer] chunked mode: {len(chunks)} chunks")
-        partial_summaries: list[str] = []
-        for i, chunk in enumerate(chunks):
-            log(f"[summarizer] processing chunk {i+1}/{len(chunks)} ({len(chunk)} chars)")
-            try:
-                user_prompt = user_prompt_template.format(text=chunk)
-            except Exception:
-                user_prompt = f"{user_prompt_template}\n\n{chunk}"
-
-            partial = _call_llm(client, system_prompt, user_prompt)
-            partial_summaries.append(partial)
-
-        # Merge partial summaries into a final summary
-        merged_input = "\n\n---\n\n".join(partial_summaries)
-        merge_prompt = (
-            "Below are partial summaries of consecutive sections of the same transcript. "
-            "Combine them into ONE coherent summary.\n\n"
-            "You MUST use these EXACT headings in this EXACT order, just like the partial summaries:\n"
-            "  What it's about:\n"
-            "  What they're saying:\n"
-            "  Notable Quotes:\n"
-            "  So what?:\n\n"
-            "Do not collapse into free-form prose. Do not omit any heading. "
-            "Merge the bullets under 'What they're saying' (keep 5-7 total, chronological). "
-            "Merge the quotes under 'Notable Quotes' (keep the strongest ones). "
-            "Write a single 'What it's about' line and a single 'So what?' paragraph that span the whole transcript.\n\n"
-            f"{merged_input}"
-        )
-        log(f"[summarizer] merging {len(partial_summaries)} partial summaries")
-        output = _call_llm(client, system_prompt, merge_prompt)
+        output = _call_llm(client, preset.model, system_prompt, user_prompt)
         log(f"[summarizer] output length={len(output)}")
         return output
 
-    except Exception as e:
-        handle_error("summarize_text() failed", e)
+    log(f"[summarizer] chunked mode: {len(chunks)} chunks")
+    partial_summaries: list[str] = []
+    for i, chunk in enumerate(chunks):
+        log(f"[summarizer] processing chunk {i+1}/{len(chunks)} ({len(chunk)} chars)")
+        try:
+            user_prompt = user_prompt_template.format(text=chunk)
+        except Exception:
+            user_prompt = f"{user_prompt_template}\n\n{chunk}"
+
+        partial = _call_llm(client, preset.model, system_prompt, user_prompt)
+        partial_summaries.append(partial)
+
+    merged_input = "\n\n---\n\n".join(partial_summaries)
+    merge_prompt = (
+        "Below are partial summaries of consecutive sections of the same transcript. "
+        "Combine them into ONE coherent summary.\n\n"
+        "You MUST use these EXACT headings in this EXACT order, just like the partial summaries:\n"
+        "  What it's about:\n"
+        "  What they're saying:\n"
+        "  Notable Quotes:\n"
+        "  So what?:\n\n"
+        "Do not collapse into free-form prose. Do not omit any heading. "
+        "Merge the bullets under 'What they're saying' (keep 5-7 total, chronological). "
+        "Merge the quotes under 'Notable Quotes' (keep the strongest ones). "
+        "Write a single 'What it's about' line and a single 'So what?' paragraph that span the whole transcript.\n\n"
+        f"{merged_input}"
+    )
+    log(f"[summarizer] merging {len(partial_summaries)} partial summaries")
+    output = _call_llm(client, preset.model, system_prompt, merge_prompt)
+    log(f"[summarizer] output length={len(output)}")
+    return output
 
 
 # ======================================================
@@ -222,8 +205,9 @@ def main():
 
     log(f"mode={args.mode}")
     log(f"input file={args.file}")
-    log(f"BASE_URL={BASE_URL}")
-    log(f"MODEL={MODEL}")
+    config = load_runtime_config()
+    log(f"BASE_URL={config.preset.base_url}")
+    log(f"MODEL={config.preset.model}")
 
     if not os.path.exists(args.file):
         handle_error(f"File not found: {args.file}")
@@ -247,7 +231,7 @@ def main():
         handle_error("Input file is empty")
 
     # ==== モデル実行 ====
-    output_text = summarize_text(text, args.mode)
+    output_text = summarize_text(text, args.mode, config.preset)
 
     # ==== 出力 ====
     try:
