@@ -8,6 +8,8 @@ CLIPMIND_BRANCH="${CLIPMIND_BRANCH:-main}"
 CLIPMIND_HOME="${CLIPMIND_HOME:-$HOME/.local/share/clipmind}"
 BIN_DIR="${CLIPMIND_INSTALL_DIR:-$HOME/.local/bin}"
 
+unset GIT_DIR GIT_WORK_TREE
+
 die() {
   echo "Error: $*" >&2
   exit 1
@@ -78,6 +80,7 @@ is_git_repo_root() {
 }
 
 ensure_clone() {
+  local current_branch
   if is_git_repo_root; then
     if [[ "${CLIPMIND_SKIP_GIT_UPDATE:-0}" == "1" ]]; then
       echo "Using existing clone (git update skipped): $CLIPMIND_HOME"
@@ -85,8 +88,12 @@ ensure_clone() {
     fi
     echo "Updating existing clone: $CLIPMIND_HOME"
     git -C "$CLIPMIND_HOME" fetch origin "$CLIPMIND_BRANCH"
-    git -C "$CLIPMIND_HOME" checkout "$CLIPMIND_BRANCH"
-    git -C "$CLIPMIND_HOME" pull --ff-only origin "$CLIPMIND_BRANCH"
+    current_branch="$(git -C "$CLIPMIND_HOME" branch --show-current)"
+    if [[ "$current_branch" == "$CLIPMIND_BRANCH" ]]; then
+      git -C "$CLIPMIND_HOME" pull --ff-only origin "$CLIPMIND_BRANCH"
+    else
+      echo "Fetched $CLIPMIND_BRANCH; current branch is ${current_branch:-detached}; update skipped."
+    fi
     return 0
   fi
 
