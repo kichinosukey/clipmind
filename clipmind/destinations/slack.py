@@ -2,33 +2,27 @@
 
 from __future__ import annotations
 
-import os
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
 
 from clipmind.discord_client import soft_split
-from clipmind.paths import load_project_dotenv
 from clipmind.utils.log import log
 
 if TYPE_CHECKING:
     from clipmind.clip import Clip
 
-load_project_dotenv()
-
-DEFAULT_SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
 SLACK_TEXT_MAX = 3000  # Slack Block Kit text block limit
 
 
+@dataclass(frozen=True)
 class SlackDestination:
     """Post a Clip summary to Slack via Incoming Webhook."""
 
-    def post(self, clip: Clip) -> None:
-        webhook_url = DEFAULT_SLACK_WEBHOOK_URL
-        if not webhook_url:
-            log("SLACK_WEBHOOK_URL is not set. Skipping Slack post.", "WARN")
-            return
+    webhook_url: str
 
+    def post(self, clip: Clip) -> None:
         summary = clip.summary_ja or clip.summary_en or ""
         if not summary:
             log("No summary available. Skipping Slack post.", "WARN")
@@ -36,7 +30,6 @@ class SlackDestination:
 
         log("[SlackDestination] posting")
         log(f"title={clip.title}")
-        log(f"webhook_url={webhook_url[:40]}...")
         log(f"summary_length={len(summary)}")
 
         parts = soft_split(summary, max_len=SLACK_TEXT_MAX)
@@ -65,7 +58,7 @@ class SlackDestination:
             },
         ]
 
-        self._send(webhook_url, {"blocks": blocks})
+        self._send(self.webhook_url, {"blocks": blocks})
         log("[SlackDestination] first message OK")
 
         # Remaining parts as follow-up messages.
@@ -81,7 +74,7 @@ class SlackDestination:
                     },
                 ],
             }
-            self._send(webhook_url, payload)
+            self._send(self.webhook_url, payload)
             log(f"[SlackDestination] Part {i} OK")
 
         log(f"[SlackDestination] 完了（{len(parts)}分割）")

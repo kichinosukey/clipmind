@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Callable, Protocol
 
 if TYPE_CHECKING:
     from clipmind.clip import Clip
@@ -14,21 +14,23 @@ class DestinationAdapter(Protocol):
     def post(self, clip: Clip) -> None: ...
 
 
-_ADAPTERS: dict[str, type[DestinationAdapter]] = {}
+_ADAPTERS: dict[str, Callable[..., DestinationAdapter]] = {}
 
 
-def register(name: str, cls: type[DestinationAdapter]) -> None:
+def register(name: str, cls: Callable[..., DestinationAdapter]) -> None:
     _ADAPTERS[name] = cls
 
 
-def resolve_destination(name: str) -> DestinationAdapter:
+def resolve_destination(name: str, *, webhook_url: str | None) -> DestinationAdapter:
     """Return an adapter instance for the given destination name.
 
     Raises ``KeyError`` if the destination is unknown.
     """
     if name not in _ADAPTERS:
         raise KeyError(f"Unknown destination: {name!r}. Available: {list(_ADAPTERS)}")
-    return _ADAPTERS[name]()
+    if not webhook_url:
+        raise ValueError(f"Webhook is not configured for destination: {name}")
+    return _ADAPTERS[name](webhook_url=webhook_url)
 
 
 # Auto-register built-in adapters on import.

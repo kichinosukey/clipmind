@@ -9,23 +9,17 @@ Usages:
 
 from __future__ import annotations
 
-import os
 import sys
 from typing import TYPE_CHECKING
 
 import requests
 
-from clipmind.paths import load_project_dotenv
 from clipmind.utils.log import log
 from clipmind.utils.error import handle_error
 
 if TYPE_CHECKING:
     from clipmind.clip import Clip
 
-# ==== .env読込 ====
-load_project_dotenv()
-
-DEFAULT_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 MAX_LEN = 1900  # Discordメッセージ上限(2000)より安全マージン
 
 
@@ -65,17 +59,12 @@ def post_message(webhook_url: str, content: str) -> None:
 # ==========================================================
 # Clip対応API（destination adapterから呼び出す用）
 # ==========================================================
-def post_clip_to_discord(clip: Clip, webhook_url: str | None = None) -> None:
+def post_clip_to_discord(clip: Clip, webhook_url: str) -> None:
     """Clipオブジェクトの要約をDiscordに投稿する。
 
     失敗時は例外をraiseする（sys.exitしない）。
     pipelineのper-destination error isolationで使われることを想定。
     """
-    webhook_url = webhook_url or DEFAULT_WEBHOOK_URL
-    if not webhook_url:
-        log("Webhook URL is not provided. Skipping Discord post.", "WARN")
-        return
-
     summary = clip.summary_ja or clip.summary_en or ""
     if not summary:
         log("No summary available. Skipping Discord post.", "WARN")
@@ -84,7 +73,6 @@ def post_clip_to_discord(clip: Clip, webhook_url: str | None = None) -> None:
     log("[post_clip_to_discord] called")
     log(f"title={clip.title}")
     log(f"author={clip.author}")
-    log(f"webhook_url={webhook_url[:40]}...")
     log(f"summary_length={len(summary)}")
 
     # ===== 分割 =====
@@ -123,7 +111,7 @@ def post_to_discord(
     channel_name: str,
     channel_url: str,
     summary: str,
-    webhook_url: str | None = None,
+    webhook_url: str,
 ) -> None:
     """レガシーインターフェース。Clipを組み立ててpost_clip_to_discordに委譲。"""
     from clipmind.clip import Clip
@@ -154,7 +142,9 @@ def main() -> None:
         )
 
     video_title, video_url, channel_name, channel_url, summary = sys.argv[1:6]
-    webhook_url = sys.argv[6] if len(sys.argv) > 6 else None
+    if len(sys.argv) <= 6:
+        handle_error("Discord webhook URL is required")
+    webhook_url = sys.argv[6]
 
     try:
         post_to_discord(video_title, video_url, channel_name, channel_url, summary, webhook_url)

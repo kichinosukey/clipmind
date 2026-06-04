@@ -37,11 +37,9 @@ class TestPostMessage:
 
 class TestPostToDiscord:
     @responses.activate
-    def test_post_to_discord_no_webhook_skips(self, mocker):
-        """webhook_url=None and no env → no HTTP call."""
-        mocker.patch("clipmind.discord_client.DEFAULT_WEBHOOK_URL", None)
-        post_to_discord("title", "url", "channel", "ch_url", "summary")
-        assert len(responses.calls) == 0
+    def test_post_to_discord_requires_webhook(self):
+        with pytest.raises(TypeError):
+            post_to_discord("title", "url", "channel", "ch_url", "summary")
 
     @responses.activate
     def test_post_to_discord_short_summary(self):

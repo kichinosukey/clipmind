@@ -26,13 +26,10 @@ def _make_clip(**overrides):
 
 class TestSlackDestination:
     @responses.activate
-    def test_post_success(self, monkeypatch):
-        import clipmind.destinations.slack as sm
-        monkeypatch.setattr(sm, "DEFAULT_SLACK_WEBHOOK_URL", SLACK_WEBHOOK)
-
+    def test_post_success(self):
         responses.add(responses.POST, SLACK_WEBHOOK, status=200, body="ok")
 
-        dest = SlackDestination()
+        dest = SlackDestination(SLACK_WEBHOOK)
         dest.post(_make_clip())
 
         assert len(responses.calls) == 1
@@ -45,53 +42,34 @@ class TestSlackDestination:
         # Section with summary.
         assert "日本語の要約テスト" in body["blocks"][2]["text"]["text"]
 
-    def test_post_no_webhook_skips(self, monkeypatch):
-        import clipmind.destinations.slack as sm
-        monkeypatch.setattr(sm, "DEFAULT_SLACK_WEBHOOK_URL", None)
-
-        dest = SlackDestination()
-        dest.post(_make_clip())  # Should not raise.
-
-    def test_post_no_summary_skips(self, monkeypatch):
-        import clipmind.destinations.slack as sm
-        monkeypatch.setattr(sm, "DEFAULT_SLACK_WEBHOOK_URL", SLACK_WEBHOOK)
-
-        dest = SlackDestination()
+    def test_post_no_summary_skips(self):
+        dest = SlackDestination(SLACK_WEBHOOK)
         dest.post(_make_clip(summary_ja=None, summary_en=None))  # Should not raise.
 
     @responses.activate
-    def test_post_long_summary_splits(self, monkeypatch):
-        import clipmind.destinations.slack as sm
-        monkeypatch.setattr(sm, "DEFAULT_SLACK_WEBHOOK_URL", SLACK_WEBHOOK)
-
+    def test_post_long_summary_splits(self):
         responses.add(responses.POST, SLACK_WEBHOOK, status=200, body="ok")
 
         long_summary = "あ" * 3000 + "。" + "い" * 500
-        dest = SlackDestination()
+        dest = SlackDestination(SLACK_WEBHOOK)
         dest.post(_make_clip(summary_ja=long_summary))
 
         # Should be at least 2 messages due to chunking.
         assert len(responses.calls) >= 2
 
     @responses.activate
-    def test_post_http_error_raises(self, monkeypatch):
-        import clipmind.destinations.slack as sm
-        monkeypatch.setattr(sm, "DEFAULT_SLACK_WEBHOOK_URL", SLACK_WEBHOOK)
-
+    def test_post_http_error_raises(self):
         responses.add(responses.POST, SLACK_WEBHOOK, status=403, body="invalid_token")
 
-        dest = SlackDestination()
+        dest = SlackDestination(SLACK_WEBHOOK)
         with pytest.raises(Exception):
             dest.post(_make_clip())
 
     @responses.activate
-    def test_post_uses_summary_en_fallback(self, monkeypatch):
-        import clipmind.destinations.slack as sm
-        monkeypatch.setattr(sm, "DEFAULT_SLACK_WEBHOOK_URL", SLACK_WEBHOOK)
-
+    def test_post_uses_summary_en_fallback(self):
         responses.add(responses.POST, SLACK_WEBHOOK, status=200, body="ok")
 
-        dest = SlackDestination()
+        dest = SlackDestination(SLACK_WEBHOOK)
         dest.post(_make_clip(summary_ja=None, summary_en="English fallback"))
 
         assert len(responses.calls) == 1
