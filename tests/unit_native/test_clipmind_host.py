@@ -147,6 +147,7 @@ class TestMain:
         project_root = Path(clipmind_host.__file__).resolve().parent.parent
         assert call_args.args[0][0] == str(project_root / ".venv" / "bin" / "python")
         assert call_args.args[0][1] == str(project_root / "native-host" / "clipmind_runner.py")
+        assert len(call_args.args[0]) == 4
         assert call_args.kwargs["cwd"] == str(project_root)
 
         msg = _read_native_message(buf)

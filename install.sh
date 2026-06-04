@@ -154,16 +154,6 @@ warn_brew_deps() {
   done
 }
 
-ensure_env_file() {
-  if [[ -f "$CLIPMIND_HOME/.env" ]]; then
-    return 0
-  fi
-  if [[ -f "$CLIPMIND_HOME/.env.example" ]]; then
-    cp "$CLIPMIND_HOME/.env.example" "$CLIPMIND_HOME/.env"
-    echo "Created $CLIPMIND_HOME/.env from .env.example — edit API keys and OUTROOT."
-  fi
-}
-
 main() {
   require_cmd git
   require_cmd python3
@@ -174,8 +164,6 @@ main() {
   ensure_clone
   ensure_venv
   install_python_deps
-  ensure_env_file
-
   if [[ ! -x "$CLIPMIND_HOME/scripts/install-local.sh" ]]; then
     die "scripts/install-local.sh not found in $CLIPMIND_HOME"
   fi
@@ -191,8 +179,9 @@ ClipMind installed.
   Commands:    clipmind-run, clipmind-repair  (in $BIN_DIR)
 
 Next steps:
-  1. Edit $CLIPMIND_HOME/.env
-  2. Prepare Whisper.cpp (see README)
+  1. Prepare Whisper.cpp (see README)
+  2. Start the menu bar app and configure ClipMind:
+       swift run --package-path "$CLIPMIND_HOME/macos-app" ClipMindMenuBar
   3. brew install yt-dlp ffmpeg   (if not already installed)
   4. Load chrome-extension/ in chrome://extensions
   5. clipmind-repair <extension-id>

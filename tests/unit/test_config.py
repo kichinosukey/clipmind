@@ -88,12 +88,25 @@ def test_missing_referenced_secret_is_actionable(tmp_path):
 def test_unconfigured_destination_secret_is_not_loaded(tmp_path):
     path = write_config(
         tmp_path,
-        lambda data: data["shared"].update(
-            enabledDestinations=[], discordWebhookRef=None
-        ),
+        lambda data: data["shared"].update(enabledDestinations=[]),
     )
 
     runtime = load_runtime_config(path, FakeSecrets({"quality-api": "api-secret"}))
 
     assert runtime.default_destinations == ()
     assert runtime.discord_webhook is None
+
+
+def test_disabled_destination_secret_is_available_for_explicit_override(tmp_path):
+    path = write_config(
+        tmp_path,
+        lambda data: data["shared"].update(enabledDestinations=[]),
+    )
+
+    runtime = load_runtime_config(
+        path,
+        FakeSecrets({"quality-api": "api-secret", "discord-hook": "discord-secret"}),
+    )
+
+    assert runtime.default_destinations == ()
+    assert runtime.discord_webhook == "discord-secret"

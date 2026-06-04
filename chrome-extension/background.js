@@ -43,7 +43,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
 
   chrome.runtime.sendNativeMessage(
     NATIVE_HOST,
-    { action: "summarize", url, destinations: ["discord", "slack"] },
+    { action: "summarize", url },
     (response) => {
       if (chrome.runtime.lastError) {
         chrome.notifications.create({

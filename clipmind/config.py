@@ -77,6 +77,15 @@ def _load_secret(store: SecretStore, reference: str) -> str:
         raise ConfigError(f"Configured secret is unavailable: {reference}") from exc
 
 
+def _load_optional_secret(store: SecretStore, reference: str | None) -> str | None:
+    if not reference:
+        return None
+    try:
+        return _load_secret(store, reference)
+    except ConfigError:
+        return None
+
+
 def load_runtime_config(
     path: Path = CONFIG_PATH,
     secret_store: SecretStore | None = None,
@@ -170,6 +179,14 @@ def load_runtime_config(
         ),
         output_root=str(Path(_required_text(shared, "outputRoot", "shared")).expanduser()),
         default_destinations=tuple(destinations),
-        discord_webhook=_load_secret(store, discord_ref) if discord_ref else None,
-        slack_webhook=_load_secret(store, slack_ref) if slack_ref else None,
+        discord_webhook=(
+            _load_secret(store, discord_ref)
+            if "discord" in destinations and discord_ref
+            else _load_optional_secret(store, discord_ref)
+        ),
+        slack_webhook=(
+            _load_secret(store, slack_ref)
+            if "slack" in destinations and slack_ref
+            else _load_optional_secret(store, slack_ref)
+        ),
     )

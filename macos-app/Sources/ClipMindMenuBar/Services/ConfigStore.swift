@@ -27,15 +27,41 @@ struct ConfigStore {
 
     static func validate(_ config: ClipMindConfig) throws {
         guard config.schemaVersion == 1 else { throw ConfigStoreError.invalid("schemaVersion must be 1") }
+        guard !config.presets.isEmpty else { throw ConfigStoreError.invalid("At least one preset is required") }
         guard Set(config.presets.map(\.id)).count == config.presets.count else {
             throw ConfigStoreError.invalid("Preset IDs must be unique")
+        }
+        let requiredPresetFields: [(Preset) -> String] = [
+            \.id, \.name, \.baseURL, \.model, \.apiKeyRef,
+            \.summarizeSystemPrompt, \.summarizeUserPrompt,
+            \.translateSystemPrompt, \.translateUserPrompt,
+        ]
+        guard config.presets.allSatisfy({ preset in
+            requiredPresetFields.allSatisfy { !$0(preset).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        }) else {
+            throw ConfigStoreError.invalid("Preset fields must not be empty")
         }
         guard config.presets.contains(where: { $0.id == config.activePresetId }) else {
             throw ConfigStoreError.invalid("Active preset is missing")
         }
         let supported = Set(["discord", "slack"])
+        guard Set(config.shared.enabledDestinations).count == config.shared.enabledDestinations.count else {
+            throw ConfigStoreError.invalid("Destinations must be unique")
+        }
         guard Set(config.shared.enabledDestinations).isSubset(of: supported) else {
             throw ConfigStoreError.invalid("Unsupported destination")
+        }
+        if config.shared.enabledDestinations.contains("discord") {
+            guard let reference = config.shared.discordWebhookRef,
+                  !reference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw ConfigStoreError.invalid("Discord webhook reference is required")
+            }
+        }
+        if config.shared.enabledDestinations.contains("slack") {
+            guard let reference = config.shared.slackWebhookRef,
+                  !reference.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw ConfigStoreError.invalid("Slack webhook reference is required")
+            }
         }
         guard FileManager.default.isExecutableFile(atPath: config.shared.whisperBinaryPath) else {
             throw ConfigStoreError.invalid("Whisper binary is not executable")

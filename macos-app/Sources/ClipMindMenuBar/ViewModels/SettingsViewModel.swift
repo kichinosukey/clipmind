@@ -35,9 +35,21 @@ final class SettingsViewModel: ObservableObject {
         config.presets.append(Preset(
             id: id, name: "New Preset", baseURL: "http://localhost:1234/v1",
             model: "", apiKeyRef: "preset-\(id)-api-key",
-            summarizeSystemPrompt: "", summarizeUserPrompt: "{text}",
-            translateSystemPrompt: "", translateUserPrompt: "{text}"
+            summarizeSystemPrompt: "Summarize the transcript.",
+            summarizeUserPrompt: "{text}",
+            translateSystemPrompt: "Translate the summary into Japanese.",
+            translateUserPrompt: "{text}"
         ))
+        config.activePresetId = id
+    }
+
+    func duplicatePreset(_ source: Preset) {
+        let id = UUID().uuidString.lowercased()
+        var copy = source
+        copy.id = id
+        copy.name = "\(source.name) Copy"
+        copy.apiKeyRef = "preset-\(id)-api-key"
+        config.presets.append(copy)
         config.activePresetId = id
     }
 

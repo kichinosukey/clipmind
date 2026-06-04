@@ -1,4 +1,4 @@
-"""Shared path and environment helpers for ClipMind."""
+"""Shared path helpers for ClipMind."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ NATIVE_HOST_NAME = "com.clipmind.host"
 KEYCHAIN_SERVICE = "com.kichinosukey.clipmind"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ENV_PATH = PROJECT_ROOT / ".env"
 
 APPLICATION_SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "ClipMind"
 CONFIG_PATH = APPLICATION_SUPPORT_DIR / "config.json"
@@ -46,20 +45,6 @@ STATUS_DIR = JOBS_DIR
 DEFAULT_OUTROOT = str(PROJECT_ROOT / "data")
 DEFAULT_WHISPER_BIN = "whisper-cli"
 DEFAULT_WHISPER_MODEL = str(Path.home() / ".local" / "share" / "whisper" / "models" / "ggml-base.en.bin")
-
-
-def load_project_dotenv(
-    env_path: Path | None = None,
-    *,
-    override: bool = False,
-) -> bool:
-    """Load the repository .env explicitly so cwd does not matter."""
-    from dotenv import load_dotenv
-
-    target_path = Path(env_path) if env_path is not None else ENV_PATH
-    return load_dotenv(dotenv_path=target_path, override=override)
-
-
 def embedded_venv_path_warnings(project_root: Path | None = None) -> list[str]:
     """Report stale absolute paths embedded in virtualenv helper scripts."""
     root = Path(project_root) if project_root is not None else PROJECT_ROOT

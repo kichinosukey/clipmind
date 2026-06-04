@@ -52,7 +52,7 @@ def main():
         send_message({"status": "error", "error": "No URL provided"})
         return
 
-    destinations = msg.get("destinations", ["discord"])
+    destinations = msg.get("destinations")
 
     # ジョブID生成
     job_id = hashlib.md5(f"{url}:{time.time()}".encode()).hexdigest()[:12]
@@ -73,11 +73,13 @@ def main():
         })
         return
 
-    dests_arg = ",".join(destinations)
+    command = [venv_python, runner, url, job_id]
+    if destinations is not None:
+        command.append(",".join(destinations))
 
     with open(log_file, "w") as lf:
         subprocess.Popen(
-            [venv_python, runner, url, job_id, dests_arg],
+            command,
             stdout=lf,
             stderr=lf,
             stdin=subprocess.DEVNULL,

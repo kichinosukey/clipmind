@@ -23,8 +23,14 @@ struct PresetEditorView: View {
                         }
                     }
                     SecureField("API key", text: $apiKey)
+                    Text("Summary system prompt")
                     TextEditor(text: $settings.config.presets[index].summarizeSystemPrompt)
+                    Text("Summary user prompt")
                     TextEditor(text: $settings.config.presets[index].summarizeUserPrompt)
+                    Text("Translation system prompt")
+                    TextEditor(text: $settings.config.presets[index].translateSystemPrompt)
+                    Text("Translation user prompt")
+                    TextEditor(text: $settings.config.presets[index].translateUserPrompt)
                     HStack {
                         Button("Test Connection") { Task { await settings.discoverModels() } }
                         Button("Save API Key") {
@@ -35,11 +41,15 @@ struct PresetEditorView: View {
                             apiKey = ""
                         }
                         Button("Save") { settings.save() }
+                        Button("Duplicate") {
+                            settings.duplicatePreset(settings.config.presets[index])
+                        }
                         Button("Delete") { settings.deletePreset(settings.config.presets[index].id) }
                     }
                 } else {
                     Button("Create first preset") { settings.addPreset() }
                 }
+                Button("Add Preset") { settings.addPreset() }
                 if let error = settings.errorMessage { Text(error).foregroundStyle(.red) }
             }.padding()
         }

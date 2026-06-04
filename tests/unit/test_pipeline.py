@@ -105,6 +105,30 @@ class TestRunPipeline:
             )
         reporter.fail.assert_called_once()
 
+    def test_delivery_error_redacts_runtime_secrets(
+        self, mocker, runtime_config, tmp_path, ytdlp_metadata
+    ):
+        _patch_subprocess_runs(
+            mocker, _make_subprocess_side_effect(tmp_path, ytdlp_metadata)
+        )
+        mocker.patch("clipmind.pipeline.summarize_text", side_effect=["en", "ja"])
+        destination = mocker.MagicMock()
+        destination.post.side_effect = RuntimeError(
+            f"request failed at {runtime_config.discord_webhook}"
+        )
+        mocker.patch("clipmind.pipeline.resolve_destination", return_value=destination)
+
+        from clipmind.pipeline import run_pipeline
+
+        result = run_pipeline(
+            "https://youtu.be/test",
+            config=runtime_config,
+            outroot=str(tmp_path),
+        )
+
+        assert runtime_config.discord_webhook not in result["delivery_results"]["discord"]
+        assert "[REDACTED]" in result["delivery_results"]["discord"]
+
     def test_happy_path(self, mocker, tmp_path, ytdlp_metadata):
         """Full pipeline returns dict with expected keys."""
         mocker.patch("clipmind.pipeline.os.getenv", side_effect=lambda k, d="": {

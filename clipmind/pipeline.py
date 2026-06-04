@@ -227,8 +227,9 @@ def run_pipeline(
                 delivery_results[dest_name] = "ok"
                 log(f"Posted to {dest_name} successfully")
             except Exception as e:
-                log(f"Failed to post to {dest_name}: {e}", "ERROR")
-                delivery_results[dest_name] = f"error: {e}"
+                error = redact_secrets(str(e), config.secrets)
+                log(f"Failed to post to {dest_name}: {error}", "ERROR")
+                delivery_results[dest_name] = f"error: {error}"
 
         clip.metadata["delivery_results"] = delivery_results
 

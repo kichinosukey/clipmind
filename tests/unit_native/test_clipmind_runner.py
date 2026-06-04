@@ -63,3 +63,45 @@ class TestMain:
         clipmind_runner.main()
 
         assert "エラー" in notify.call_args.args[0]
+
+    def test_main_uses_shared_default_destinations_when_not_overridden(
+        self, mocker, runtime_config, tmp_path
+    ):
+        import clipmind_runner
+
+        mocker.patch(
+            "sys.argv", ["clipmind_runner.py", "https://youtu.be/abc", "job-id"]
+        )
+        mocker.patch("clipmind_runner.os.chdir")
+        mocker.patch("clipmind_runner.JOBS_DIR", tmp_path)
+        mocker.patch("clipmind_runner.load_runtime_config", return_value=runtime_config)
+        mocker.patch("clipmind_runner.JobStatusStore")
+        run_pipeline = mocker.patch(
+            "clipmind.pipeline.run_pipeline", return_value={"title": "My Video"}
+        )
+        mocker.patch("clipmind_runner.notify")
+
+        clipmind_runner.main()
+
+        assert run_pipeline.call_args.kwargs["destinations"] is None
+
+    def test_main_preserves_explicit_empty_destinations(
+        self, mocker, runtime_config, tmp_path
+    ):
+        import clipmind_runner
+
+        mocker.patch(
+            "sys.argv", ["clipmind_runner.py", "https://youtu.be/abc", "job-id", ""]
+        )
+        mocker.patch("clipmind_runner.os.chdir")
+        mocker.patch("clipmind_runner.JOBS_DIR", tmp_path)
+        mocker.patch("clipmind_runner.load_runtime_config", return_value=runtime_config)
+        mocker.patch("clipmind_runner.JobStatusStore")
+        run_pipeline = mocker.patch(
+            "clipmind.pipeline.run_pipeline", return_value={"title": "My Video"}
+        )
+        mocker.patch("clipmind_runner.notify")
+
+        clipmind_runner.main()
+
+        assert run_pipeline.call_args.kwargs["destinations"] == []

@@ -44,7 +44,9 @@ def main():
 
     url = sys.argv[1]
     job_id = sys.argv[2]
-    destinations = sys.argv[3].split(",") if len(sys.argv) > 3 else ["discord"]
+    destinations = sys.argv[3].split(",") if len(sys.argv) > 3 and sys.argv[3] else (
+        [] if len(sys.argv) > 3 else None
+    )
 
     os.chdir(str(PROJECT_ROOT))
     if str(PROJECT_ROOT) not in sys.path:
