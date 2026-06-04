@@ -10,25 +10,6 @@ function setStatus(msg, type) {
   statusEl.className = "status" + (type ? " " + type : "");
 }
 
-// Fetch available destinations from native host on popup open.
-chrome.runtime.sendNativeMessage(NATIVE_HOST, { action: "get_config" }, (resp) => {
-  if (chrome.runtime.lastError || !resp) {
-    // Fallback: enable both.
-    return;
-  }
-  const avail = resp.destinations || [];
-  if (!avail.includes("discord")) {
-    discordCb.checked = false;
-    discordCb.disabled = true;
-    document.getElementById("label-discord").classList.add("disabled");
-  }
-  if (!avail.includes("slack")) {
-    slackCb.checked = false;
-    slackCb.disabled = true;
-    document.getElementById("label-slack").classList.add("disabled");
-  }
-});
-
 runBtn.addEventListener("click", async () => {
   console.log("[clipmind popup] button clicked");
   const destinations = [];

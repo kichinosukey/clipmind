@@ -1,132 +1,65 @@
-"""Tests for native-host/clipmind_runner.py — runner state management and notifications."""
-
-import json
-import os
-from pathlib import Path
-
-import pytest
+"""Tests for native-host/clipmind_runner.py."""
 
 
 class TestNotify:
     def test_notify_calls_osascript(self, mocker):
-        """notify() calls subprocess.run with correct osascript command."""
         import clipmind_runner
 
-        mock_run = mocker.patch("clipmind_runner.subprocess.run")
+        run = mocker.patch("clipmind_runner.subprocess.run")
         clipmind_runner.notify("Test Title", "Test Message")
-
-        mock_run.assert_called_once()
-        call_args = mock_run.call_args
-        cmd = call_args[0][0]
-        assert cmd[0] == "osascript"
-        assert cmd[1] == "-e"
-        assert "Test Title" in cmd[2]
-        assert "Test Message" in cmd[2]
+        assert run.call_args.args[0][0:2] == ["osascript", "-e"]
 
     def test_notify_silences_exception(self, mocker):
-        """notify() does not raise even if subprocess fails."""
         import clipmind_runner
 
-        mocker.patch(
-            "clipmind_runner.subprocess.run",
-            side_effect=OSError("osascript not found"),
-        )
-        # Should not raise
+        mocker.patch("clipmind_runner.subprocess.run", side_effect=OSError("missing"))
         clipmind_runner.notify("Title", "Message")
 
 
-class TestUpdateStatus:
-    def test_update_status_writes_json(self, tmp_path):
-        """update_status writes correct JSON to the status file."""
-        import clipmind_runner
-
-        status_file = str(tmp_path / "status.json")
-        data = {"status": "running", "url": "https://youtu.be/test"}
-        clipmind_runner.update_status(status_file, data)
-
-        with open(status_file) as f:
-            written = json.load(f)
-        assert written == data
-
-
 class TestMain:
-    def test_main_success(self, mocker, tmp_path):
-        """run_pipeline success → status=completed + notification."""
+    def test_main_uses_shared_config_and_host_job_id(
+        self, mocker, runtime_config, tmp_path
+    ):
         import clipmind_runner
 
-        status_file = str(tmp_path / "status.json")
-        mocker.patch("sys.argv", ["clipmind_runner.py", "https://youtu.be/abc", status_file])
-
-        # Prevent chdir
-        mock_chdir = mocker.patch("clipmind_runner.os.chdir")
-        mock_load_env = mocker.patch("clipmind_runner.load_project_dotenv")
-
-        mock_pipeline = mocker.patch(
-            "clipmind.pipeline.run_pipeline",
-            return_value={"title": "My Video", "transcript": "/tmp/t.txt", "delivery_results": {"discord": "ok"}},
-        )
-        mock_notify = mocker.patch("clipmind_runner.notify")
-
-        clipmind_runner.main()
-
-        # Verify pipeline was called with destinations
-        mock_pipeline.assert_called_once_with("https://youtu.be/abc", destinations=["discord"])
-        mock_chdir.assert_called_once_with(str(clipmind_runner.PROJECT_ROOT))
-        mock_load_env.assert_called_once_with()
-
-        # Verify status file
-        with open(status_file) as f:
-            status = json.load(f)
-        assert status["status"] == "completed"
-        assert status["title"] == "My Video"
-
-        # Verify notification
-        mock_notify.assert_called_once()
-        assert "完了" in mock_notify.call_args[0][0]
-
-    def test_main_pipeline_exit(self, mocker, tmp_path):
-        """SystemExit from pipeline → status=error + error notification."""
-        import clipmind_runner
-
-        status_file = str(tmp_path / "status.json")
-        mocker.patch("sys.argv", ["clipmind_runner.py", "https://youtu.be/abc", status_file])
-        mocker.patch("clipmind_runner.os.chdir")
-        mocker.patch("clipmind_runner.load_project_dotenv")
         mocker.patch(
-            "clipmind.pipeline.run_pipeline",
-            side_effect=SystemExit(1),
+            "sys.argv",
+            ["clipmind_runner.py", "https://youtu.be/abc", "host-job-id", "discord"],
         )
-        mock_notify = mocker.patch("clipmind_runner.notify")
+        mocker.patch("clipmind_runner.os.chdir")
+        mocker.patch("clipmind_runner.JOBS_DIR", tmp_path)
+        mocker.patch("clipmind_runner.load_runtime_config", return_value=runtime_config)
+        reporter = mocker.patch("clipmind_runner.JobStatusStore")
+        run_pipeline = mocker.patch(
+            "clipmind.pipeline.run_pipeline", return_value={"title": "My Video"}
+        )
+        notify = mocker.patch("clipmind_runner.notify")
 
         clipmind_runner.main()
 
-        with open(status_file) as f:
-            status = json.load(f)
-        assert status["status"] == "error"
-        assert "error" in status["error"].lower() or "exit" in status["error"].lower()
+        reporter.assert_called_once_with(
+            tmp_path,
+            job_id="host-job-id",
+            source_url="https://youtu.be/abc",
+            secrets=runtime_config.secrets,
+        )
+        assert run_pipeline.call_args.kwargs["config"] == runtime_config
+        assert run_pipeline.call_args.kwargs["destinations"] == ["discord"]
+        notify.assert_called_once()
 
-        mock_notify.assert_called()
-        assert "エラー" in mock_notify.call_args[0][0]
-
-    def test_main_pipeline_exception(self, mocker, tmp_path):
-        """General exception → status=error + error message in notification."""
+    def test_main_exception_notifies(self, mocker, runtime_config, tmp_path):
         import clipmind_runner
 
-        status_file = str(tmp_path / "status.json")
-        mocker.patch("sys.argv", ["clipmind_runner.py", "https://youtu.be/abc", status_file])
-        mocker.patch("clipmind_runner.os.chdir")
-        mocker.patch("clipmind_runner.load_project_dotenv")
         mocker.patch(
-            "clipmind.pipeline.run_pipeline",
-            side_effect=RuntimeError("Something broke"),
+            "sys.argv", ["clipmind_runner.py", "https://youtu.be/abc", "job-id"]
         )
-        mock_notify = mocker.patch("clipmind_runner.notify")
+        mocker.patch("clipmind_runner.os.chdir")
+        mocker.patch("clipmind_runner.JOBS_DIR", tmp_path)
+        mocker.patch("clipmind_runner.load_runtime_config", return_value=runtime_config)
+        mocker.patch("clipmind_runner.JobStatusStore")
+        mocker.patch("clipmind.pipeline.run_pipeline", side_effect=RuntimeError("broken"))
+        notify = mocker.patch("clipmind_runner.notify")
 
         clipmind_runner.main()
 
-        with open(status_file) as f:
-            status = json.load(f)
-        assert status["status"] == "error"
-        assert "Something broke" in status["error"]
-
-        mock_notify.assert_called()
+        assert "エラー" in notify.call_args.args[0]

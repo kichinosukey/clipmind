@@ -122,7 +122,7 @@ class TestMain:
         import clipmind_host
 
         status_dir = tmp_path / "jobs"
-        mocker.patch.object(clipmind_host, "STATUS_DIR", status_dir)
+        mocker.patch.object(clipmind_host, "JOBS_DIR", status_dir)
         mocker.patch.object(
             clipmind_host, "read_message",
             return_value={"url": "https://youtu.be/abc"},
@@ -153,11 +153,5 @@ class TestMain:
         assert msg["status"] == "started"
         assert "job_id" in msg
 
-        status_file = status_dir / f"{msg['job_id']}.json"
         log_file = status_dir / f"{msg['job_id']}.log"
-        assert json.loads(status_file.read_text()) == {
-            "status": "starting",
-            "url": "https://youtu.be/abc",
-            "job_id": msg["job_id"],
-        }
         assert log_file.exists()

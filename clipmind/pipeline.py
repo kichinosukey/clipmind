@@ -23,12 +23,17 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import uuid
+import argparse
+import sys
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 from clipmind.clip import Clip
 from clipmind.config import RuntimeConfig, load_runtime_config
 from clipmind.jobs import JobStage, JobStatusStore
+from clipmind.paths import JOBS_DIR
+from clipmind.secrets import redact_secrets
 from clipmind.summarizer import summarize_text
 from clipmind.destinations import resolve_destination
 from clipmind.utils.log import log
@@ -247,11 +252,34 @@ def run_pipeline(
         raise
 
 
-if __name__ == "__main__":
-    import sys
+def main() -> int:
     if len(sys.argv) < 2:
         print("Usage: python -m clipmind.pipeline <YouTube URL> [destinations]")
-        print("  destinations: comma-separated list (e.g., discord,slack)")
-        sys.exit(1)
-    dests = sys.argv[2].split(",") if len(sys.argv) > 2 else None
-    run_pipeline(sys.argv[1], destinations=dests)
+        return 1
+    parser = argparse.ArgumentParser(description="Run the ClipMind YouTube pipeline")
+    parser.add_argument("url")
+    parser.add_argument("destinations", nargs="?")
+    args = parser.parse_args()
+    try:
+        config = load_runtime_config()
+        reporter = JobStatusStore(
+            JOBS_DIR,
+            job_id=uuid.uuid4().hex[:12],
+            source_url=args.url,
+            secrets=config.secrets,
+        )
+        run_pipeline(
+            args.url,
+            config=config,
+            reporter=reporter,
+            destinations=args.destinations.split(",") if args.destinations else None,
+        )
+        return 0
+    except Exception as exc:
+        secrets = config.secrets if "config" in locals() else []
+        log(redact_secrets(str(exc), secrets), "ERROR")
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
