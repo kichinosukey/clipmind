@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import re
-import tempfile
 from pathlib import Path
 
 NATIVE_HOST_NAME = "com.clipmind.host"
+KEYCHAIN_SERVICE = "com.kichinosukey.clipmind"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ENV_PATH = PROJECT_ROOT / ".env"
+
+APPLICATION_SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "ClipMind"
+CONFIG_PATH = APPLICATION_SUPPORT_DIR / "config.json"
+JOBS_DIR = APPLICATION_SUPPORT_DIR / "jobs"
 
 NATIVE_HOST_DIR = PROJECT_ROOT / "native-host"
 NATIVE_HOST_SCRIPT = NATIVE_HOST_DIR / "clipmind_host.py"
@@ -37,7 +41,7 @@ ALFRED_WORKFLOWS_DIR = (
     / "workflows"
 )
 
-STATUS_DIR = Path(tempfile.gettempdir()) / "clipmind_status"
+STATUS_DIR = JOBS_DIR
 
 DEFAULT_OUTROOT = str(PROJECT_ROOT / "data")
 DEFAULT_WHISPER_BIN = "whisper-cli"

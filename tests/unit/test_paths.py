@@ -1,8 +1,37 @@
 """Tests for shared path and environment helpers."""
 
 import os
+import subprocess
+import sys
 
 from clipmind.paths import load_project_dotenv
+
+
+def test_shared_runtime_paths_use_application_support(tmp_path):
+    home = tmp_path / "home"
+    env = os.environ.copy()
+    env["HOME"] = str(home)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+from clipmind.paths import APPLICATION_SUPPORT_DIR, CONFIG_PATH, JOBS_DIR
+from pathlib import Path
+
+expected = Path.home() / "Library" / "Application Support" / "ClipMind"
+assert APPLICATION_SUPPORT_DIR == expected
+assert CONFIG_PATH == expected / "config.json"
+assert JOBS_DIR == expected / "jobs"
+""",
+        ],
+        capture_output=True,
+        env=env,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 class TestLoadProjectDotenv:
