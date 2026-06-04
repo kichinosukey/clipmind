@@ -89,3 +89,10 @@ def runtime_config(llm_preset, tmp_path):
         discord_webhook="https://discord.test/hook",
         slack_webhook=None,
     )
+
+
+@pytest.fixture(autouse=True)
+def shared_runtime_config(mocker, runtime_config):
+    """Keep tests isolated from the user's real shared configuration."""
+    mocker.patch("clipmind.config.load_runtime_config", return_value=runtime_config)
+    mocker.patch("clipmind.pipeline.load_runtime_config", return_value=runtime_config)

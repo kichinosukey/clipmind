@@ -58,6 +58,53 @@ def _make_subprocess_side_effect(tmp_path, ytdlp_metadata, transcript_text="Hell
 
 
 class TestRunPipeline:
+    def test_reports_pipeline_stages(
+        self, mocker, runtime_config, tmp_path, ytdlp_metadata
+    ):
+        reporter = mocker.MagicMock()
+        _patch_subprocess_runs(
+            mocker, _make_subprocess_side_effect(tmp_path, ytdlp_metadata)
+        )
+        mocker.patch("clipmind.pipeline.summarize_text", side_effect=["en", "ja"])
+        mocker.patch("clipmind.pipeline.resolve_destination", return_value=mocker.MagicMock())
+
+        from clipmind.jobs import JobStage
+        from clipmind.pipeline import run_pipeline
+
+        run_pipeline(
+            "https://youtu.be/test",
+            config=runtime_config,
+            reporter=reporter,
+            outroot=str(tmp_path),
+        )
+
+        assert [call.args[0] for call in reporter.transition.call_args_list] == [
+            JobStage.DOWNLOADING_AUDIO,
+            JobStage.TRANSCRIBING_WITH_WHISPER,
+            JobStage.SUMMARIZING,
+            JobStage.TRANSLATING,
+            JobStage.DELIVERING,
+        ]
+        reporter.set_title.assert_called_once_with("Test Video Title")
+        reporter.complete.assert_called_once_with({"discord": "ok"})
+
+    def test_reports_failure_and_reraises(self, mocker, runtime_config, tmp_path):
+        reporter = mocker.MagicMock()
+        _patch_subprocess_runs(
+            mocker, subprocess.CalledProcessError(1, ["yt-dlp", "-J"])
+        )
+
+        from clipmind.pipeline import run_pipeline
+
+        with pytest.raises(subprocess.CalledProcessError):
+            run_pipeline(
+                "https://youtu.be/test",
+                config=runtime_config,
+                reporter=reporter,
+                outroot=str(tmp_path),
+            )
+        reporter.fail.assert_called_once()
+
     def test_happy_path(self, mocker, tmp_path, ytdlp_metadata):
         """Full pipeline returns dict with expected keys."""
         mocker.patch("clipmind.pipeline.os.getenv", side_effect=lambda k, d="": {
@@ -244,21 +291,14 @@ class TestRunPipeline:
         whisper_calls = [c for c in call_log if any("whisper" in str(arg) for arg in c)]
         assert len(whisper_calls) == 0
 
-    def test_skip_flags_from_env(self, mocker, tmp_path, ytdlp_metadata):
-        """env SKIP_WAV_DOWNLOAD=1 is respected."""
+    def test_skip_flags_are_explicit(self, mocker, tmp_path, ytdlp_metadata):
+        """Explicit skip_wav_download=True is respected."""
         safe_title = "Test Video Title"
         outdir = os.path.join(str(tmp_path), "TestChannel", safe_title)
         os.makedirs(outdir, exist_ok=True)
         wav_path = os.path.join(outdir, f"{safe_title}.wav")
         with open(wav_path, "wb") as f:
             f.write(b"RIFF")
-
-        env_map = {
-            "SKIP_WAV_DOWNLOAD": "1",
-            "SKIP_TRANSCRIBE": "0",
-            "DISCORD_WEBHOOK_URL": "",
-        }
-        mocker.patch("clipmind.pipeline.os.getenv", side_effect=lambda k, d="": env_map.get(k, d))
 
         call_log = []
 
@@ -282,7 +322,7 @@ class TestRunPipeline:
 
         from clipmind.pipeline import run_pipeline
 
-        run_pipeline("https://youtu.be/test", outroot=str(tmp_path))
+        run_pipeline("https://youtu.be/test", outroot=str(tmp_path), skip_wav_download=True)
 
         download_calls = [c for c in call_log if "--no-playlist" in c]
         assert len(download_calls) == 0
@@ -303,11 +343,13 @@ class TestRunPipeline:
         from clipmind.pipeline import run_pipeline
 
         result = run_pipeline("https://youtu.be/test", outroot=str(tmp_path))
-        mock_resolve.assert_called_once_with("discord")
+        mock_resolve.assert_called_once_with(
+            "discord", webhook_url="https://discord.test/hook"
+        )
         assert "delivery_results" in result
 
     def test_subprocess_failure_exits(self, mocker, tmp_path):
-        """yt-dlp CalledProcessError → SystemExit."""
+        """yt-dlp CalledProcessError is re-raised."""
         mocker.patch("clipmind.pipeline.os.getenv", side_effect=lambda k, d="": {
             "SKIP_WAV_DOWNLOAD": "0",
             "SKIP_TRANSCRIBE": "0",
@@ -320,7 +362,7 @@ class TestRunPipeline:
 
         from clipmind.pipeline import run_pipeline
 
-        with pytest.raises(SystemExit):
+        with pytest.raises(subprocess.CalledProcessError):
             run_pipeline("https://youtu.be/test", outroot=str(tmp_path))
 
     def test_safe_title_sanitization(self, mocker, tmp_path):
@@ -353,7 +395,7 @@ class TestRunPipeline:
         assert len(title_dir) <= 80
 
     def test_empty_transcript_exits(self, mocker, tmp_path, ytdlp_metadata):
-        """Empty transcription file → SystemExit."""
+        """Empty transcription file raises ValueError."""
         mocker.patch("clipmind.pipeline.os.getenv", side_effect=lambda k, d="": {
             "SKIP_WAV_DOWNLOAD": "0",
             "SKIP_TRANSCRIBE": "0",
@@ -370,5 +412,5 @@ class TestRunPipeline:
 
         from clipmind.pipeline import run_pipeline
 
-        with pytest.raises(SystemExit):
+        with pytest.raises(ValueError, match="empty"):
             run_pipeline("https://youtu.be/test", outroot=str(tmp_path))

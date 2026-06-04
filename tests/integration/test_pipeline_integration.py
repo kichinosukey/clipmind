@@ -69,9 +69,6 @@ class TestFullPipelineIntegration:
         mock_client = mocker.MagicMock()
         mock_client.chat.completions.create.return_value = mock_response
         mocker.patch("clipmind.summarizer.OpenAI", return_value=mock_client)
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
 
         # Different responses for summarize vs translate
         call_count = [0]
@@ -92,18 +89,6 @@ class TestFullPipelineIntegration:
         # Mock Discord webhook — also patch DEFAULT_WEBHOOK_URL in discord_client
         # so post_to_discord uses the test URL when called without explicit webhook_url
         responses.add(responses.POST, WEBHOOK_URL, status=200)
-        mocker.patch("clipmind.discord_client.DEFAULT_WEBHOOK_URL", WEBHOOK_URL)
-
-        # Set Discord webhook env
-        mocker.patch(
-            "clipmind.pipeline.os.getenv",
-            side_effect=lambda k, d="": {
-                "SKIP_WAV_DOWNLOAD": "0",
-                "SKIP_TRANSCRIBE": "0",
-                "DISCORD_WEBHOOK_URL": WEBHOOK_URL,
-            }.get(k, d),
-        )
-
         from clipmind.pipeline import run_pipeline
 
         result = run_pipeline("https://youtu.be/integration", outroot=str(tmp_path))
@@ -145,24 +130,11 @@ class TestFullPipelineIntegration:
         mock_client = mocker.MagicMock()
         mock_client.chat.completions.create.return_value = mock_response
         mocker.patch("clipmind.summarizer.OpenAI", return_value=mock_client)
-        mocker.patch("clipmind.summarizer.MODEL", "test-model")
-        mocker.patch("clipmind.summarizer.BASE_URL", "http://test:1234/v1")
-        mocker.patch("clipmind.summarizer.API_KEY", "test-key")
-
-        mocker.patch(
-            "clipmind.pipeline.os.getenv",
-            side_effect=lambda k, d="": {
-                "SKIP_WAV_DOWNLOAD": "0",
-                "SKIP_TRANSCRIBE": "0",
-            }.get(k, d),
-        )
-
-        # Ensure Discord adapter sees no webhook URL → skips posting.
-        mocker.patch("clipmind.discord_client.DEFAULT_WEBHOOK_URL", None)
-
         from clipmind.pipeline import run_pipeline
 
-        result = run_pipeline("https://youtu.be/no-discord", outroot=str(tmp_path))
+        result = run_pipeline(
+            "https://youtu.be/no-discord", outroot=str(tmp_path), destinations=[]
+        )
 
         assert result["title"] == "Integration Test Video"
         # No HTTP calls should have been made (Discord skipped due to no webhook)

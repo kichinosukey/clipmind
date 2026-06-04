@@ -20,27 +20,19 @@ YouTube動画URLを起点に、以下の一連の処理を自動実行する統�
 
 from __future__ import annotations
 
-import os
 import json
+import os
 import subprocess
+from pathlib import Path
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 from clipmind.clip import Clip
+from clipmind.config import RuntimeConfig, load_runtime_config
+from clipmind.jobs import JobStage, JobStatusStore
 from clipmind.summarizer import summarize_text
 from clipmind.destinations import resolve_destination
-from clipmind.paths import (
-    DEFAULT_OUTROOT,
-    DEFAULT_WHISPER_BIN,
-    DEFAULT_WHISPER_MODEL,
-    load_project_dotenv,
-)
 from clipmind.utils.log import log
-from clipmind.utils.error import handle_error
 from clipmind.ytdlp_health import run_ytdlp_with_fallback, warn_if_outdated
-
-# ==== .env 読み込み ====
-load_project_dotenv()
-
 
 _YT_HOSTS = {"www.youtube.com", "youtube.com", "m.youtube.com", "music.youtube.com"}
 _YT_STRIP_PARAMS = {"list", "index", "start_radio", "pp", "si", "feature"}
@@ -57,12 +49,13 @@ def _normalize_youtube_url(url: str) -> str:
 
 def run_pipeline(
     url: str,
+    *,
+    config: RuntimeConfig | None = None,
+    reporter: JobStatusStore | None = None,
     destinations: list[str] | None = None,
     outroot: str | None = None,
-    whisper_bin: str | None = None,
-    whisper_model: str | None = None,
-    skip_wav_download: bool | None = None,
-    skip_transcribe: bool | None = None,
+    skip_wav_download: bool = False,
+    skip_transcribe: bool = False,
 ) -> dict:
     """YouTube URLを入力として、要約〜投稿までを自動実行する。
 
@@ -76,35 +69,21 @@ def run_pipeline(
     Returns:
         dict: 実行結果情報を含む辞書。
     """
-    if destinations is None:
-        destinations = ["discord"]
+    config = config or load_runtime_config()
+    destinations = destinations if destinations is not None else list(config.default_destinations)
 
     url = _normalize_youtube_url(url)
 
     try:
-        # ==== フラグの決定 ====
-        skip_wav_download = (
-            skip_wav_download
-            if skip_wav_download is not None
-            else bool(int(os.getenv("SKIP_WAV_DOWNLOAD", "0")))
-        )
-        skip_transcribe = (
-            skip_transcribe
-            if skip_transcribe is not None
-            else bool(int(os.getenv("SKIP_TRANSCRIBE", "0")))
-        )
-
         # ==== 出力先の決定 ====
-        outroot = outroot or os.getenv("OUTROOT", DEFAULT_OUTROOT)
-        outroot = os.path.expanduser(outroot)
-        os.makedirs(outroot, exist_ok=True)
+        outroot = outroot or config.output_root
+        outroot = str(Path(outroot).expanduser())
+        Path(outroot).mkdir(parents=True, exist_ok=True)
         log(f"Output root directory: {outroot}")
 
         # ==== Whisper設定 ====
-        whisper_bin = whisper_bin or os.getenv("WHISPER_BIN", DEFAULT_WHISPER_BIN)
-        whisper_model = whisper_model or os.getenv("WHISPER_MODEL", DEFAULT_WHISPER_MODEL)
-        whisper_bin = os.path.expanduser(whisper_bin)
-        whisper_model = os.path.expanduser(whisper_model)
+        whisper_bin = str(Path(config.whisper_binary_path).expanduser())
+        whisper_model = str(Path(config.whisper_model_path).expanduser())
         log(f"Using Whisper binary: {whisper_bin}")
         log(f"Using Whisper model: {whisper_model}")
 
@@ -114,6 +93,8 @@ def run_pipeline(
         warn_if_outdated()
 
         # ==== 1. 動画メタデータ取得 ====
+        if reporter:
+            reporter.transition(JobStage.DOWNLOADING_AUDIO)
         log("Fetching video metadata...")
         result = run_ytdlp_with_fallback(
             ["-J", url],
@@ -135,12 +116,14 @@ def run_pipeline(
             author=channel_name,
             author_url=channel_url,
         )
+        if reporter:
+            reporter.set_title(video_title)
 
         # ==== 2. ダウンロードディレクトリ設定 ====
         safe_title = "".join(c if c.isalnum() or c in " _-" else "_" for c in video_title)[:80]
-        outdir = os.path.join(outroot, channel_name, safe_title)
-        os.makedirs(outdir, exist_ok=True)
-        wav_path = os.path.join(outdir, f"{safe_title}.wav")
+        outdir = str(Path(outroot) / channel_name / safe_title)
+        Path(outdir).mkdir(parents=True, exist_ok=True)
+        wav_path = str(Path(outdir) / f"{safe_title}.wav")
 
         # ==== 3. 音声ダウンロード ====
         if skip_wav_download and os.path.exists(wav_path):
@@ -161,6 +144,8 @@ def run_pipeline(
         clip.audio_path = wav_path
 
         # ==== 4. Whisper文字起こし ====
+        if reporter:
+            reporter.transition(JobStage.TRANSCRIBING_WITH_WHISPER)
         txt_out = wav_path.replace(".wav", ".txt")
         if skip_transcribe and os.path.exists(txt_out):
             log(f"Skip transcription (exists): {txt_out}")
@@ -182,8 +167,10 @@ def run_pipeline(
         clip.transcript = text
 
         # ==== 5. 要約 ====
+        if reporter:
+            reporter.transition(JobStage.SUMMARIZING)
         log("Summarizing in English...")
-        summary_en = summarize_text(text, "summarize")
+        summary_en = summarize_text(text, "summarize", config.preset)
         log(f"DEBUG: summary_en length = {len(summary_en)}")
 
         summary_en_path = txt_out.replace(".txt", "_summary.txt")
@@ -194,8 +181,10 @@ def run_pipeline(
         clip.summary_en = summary_en
 
         # ==== 6. 翻訳 ====
+        if reporter:
+            reporter.transition(JobStage.TRANSLATING)
         log("Translating to Japanese...")
-        summary_ja = summarize_text(summary_en, "translate")
+        summary_ja = summarize_text(summary_en, "translate", config.preset)
         log(f"DEBUG: summary_ja length = {len(summary_ja)}")
 
         summary_ja_path = txt_out.replace(".txt", "_summary_ja.txt")
@@ -218,10 +207,17 @@ def run_pipeline(
         log(f"Metadata written to: {outdir}/metadata.json")
 
         # ==== 8. デスティネーションへ投稿（per-destination error isolation） ====
+        if reporter:
+            reporter.transition(JobStage.DELIVERING)
         delivery_results: dict[str, str] = {}
         for dest_name in destinations:
             try:
-                dest = resolve_destination(dest_name)
+                webhook_url = (
+                    config.discord_webhook
+                    if dest_name == "discord"
+                    else config.slack_webhook if dest_name == "slack" else None
+                )
+                dest = resolve_destination(dest_name, webhook_url=webhook_url)
                 dest.post(clip)
                 delivery_results[dest_name] = "ok"
                 log(f"Posted to {dest_name} successfully")
@@ -232,6 +228,8 @@ def run_pipeline(
         clip.metadata["delivery_results"] = delivery_results
 
         log(f"Pipeline finished for: {video_title} (delivery: {delivery_results})")
+        if reporter:
+            reporter.complete(delivery_results)
 
         return {
             "title": video_title,
@@ -243,10 +241,10 @@ def run_pipeline(
             "delivery_results": delivery_results,
         }
 
-    except subprocess.CalledProcessError as e:
-        handle_error(f"Command failed: {e.cmd}", e)
     except Exception as e:
-        handle_error("Pipeline execution failed", e)
+        if reporter:
+            reporter.fail(e)
+        raise
 
 
 if __name__ == "__main__":

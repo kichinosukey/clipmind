@@ -12,18 +12,7 @@ DISCORD_WEBHOOK = "https://discord.com/api/webhooks/test/token"
 SLACK_WEBHOOK = "https://hooks.slack.com/services/T00/B00/xxxx"
 
 
-@pytest.fixture
-def multi_dest_env(monkeypatch, mock_env):
-    """Environment with both Discord and Slack webhooks configured."""
-    monkeypatch.setenv("DISCORD_WEBHOOK_URL", DISCORD_WEBHOOK)
-    monkeypatch.setenv("SLACK_WEBHOOK_URL", SLACK_WEBHOOK)
-
-    # Patch module-level defaults that were loaded at import time.
-    import clipmind.discord_client as dc
-    import clipmind.destinations.slack as sm
-
-    monkeypatch.setattr(dc, "DEFAULT_WEBHOOK_URL", DISCORD_WEBHOOK)
-    monkeypatch.setattr(sm, "DEFAULT_SLACK_WEBHOOK_URL", SLACK_WEBHOOK)
+WEBHOOKS = {"discord": DISCORD_WEBHOOK, "slack": SLACK_WEBHOOK}
 
 
 class TestMultiDestDelivery:
@@ -41,7 +30,7 @@ class TestMultiDestDelivery:
         )
 
     @responses.activate
-    def test_both_destinations_called(self, multi_dest_env):
+    def test_both_destinations_called(self):
         """Discord and Slack both receive posts."""
         responses.add(responses.POST, DISCORD_WEBHOOK, status=200)
         responses.add(responses.POST, SLACK_WEBHOOK, status=200, body="ok")
@@ -52,7 +41,7 @@ class TestMultiDestDelivery:
         results = {}
         for dest_name in ["discord", "slack"]:
             try:
-                dest = resolve_destination(dest_name)
+                dest = resolve_destination(dest_name, webhook_url=WEBHOOKS[dest_name])
                 dest.post(clip)
                 results[dest_name] = "ok"
             except Exception as e:
@@ -66,7 +55,7 @@ class TestMultiDestDelivery:
         assert len(slack_calls) >= 1
 
     @responses.activate
-    def test_partial_failure_discord_fails(self, multi_dest_env):
+    def test_partial_failure_discord_fails(self):
         """Discord fails, Slack succeeds. Both are reported."""
         responses.add(responses.POST, DISCORD_WEBHOOK, status=500, body="Server Error")
         responses.add(responses.POST, SLACK_WEBHOOK, status=200, body="ok")
@@ -77,7 +66,7 @@ class TestMultiDestDelivery:
         results = {}
         for dest_name in ["discord", "slack"]:
             try:
-                dest = resolve_destination(dest_name)
+                dest = resolve_destination(dest_name, webhook_url=WEBHOOKS[dest_name])
                 dest.post(clip)
                 results[dest_name] = "ok"
             except Exception as e:
@@ -87,7 +76,7 @@ class TestMultiDestDelivery:
         assert results["slack"] == "ok"
 
     @responses.activate
-    def test_partial_failure_slack_fails(self, multi_dest_env):
+    def test_partial_failure_slack_fails(self):
         """Slack fails, Discord succeeds."""
         responses.add(responses.POST, DISCORD_WEBHOOK, status=200)
         responses.add(responses.POST, SLACK_WEBHOOK, status=403, body="invalid_token")
@@ -98,7 +87,7 @@ class TestMultiDestDelivery:
         results = {}
         for dest_name in ["discord", "slack"]:
             try:
-                dest = resolve_destination(dest_name)
+                dest = resolve_destination(dest_name, webhook_url=WEBHOOKS[dest_name])
                 dest.post(clip)
                 results[dest_name] = "ok"
             except Exception as e:
@@ -108,7 +97,7 @@ class TestMultiDestDelivery:
         assert "error" in results["slack"]
 
     @responses.activate
-    def test_default_destinations(self, multi_dest_env):
+    def test_default_destinations(self):
         """When no destinations specified, default to discord."""
         responses.add(responses.POST, DISCORD_WEBHOOK, status=200)
 
@@ -117,7 +106,7 @@ class TestMultiDestDelivery:
         clip = self._make_clip()
         default_dests = ["discord"]
         for dest_name in default_dests:
-            dest = resolve_destination(dest_name)
+            dest = resolve_destination(dest_name, webhook_url=WEBHOOKS[dest_name])
             dest.post(clip)
 
         assert len(responses.calls) >= 1
