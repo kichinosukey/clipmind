@@ -23,9 +23,7 @@ struct MenuContentView: View {
         }
         Divider()
         if #available(macOS 14.0, *) {
-            SettingsLink {
-                Text("設定を開く...")
-            }
+            OpenSettingsMenuItem()
         } else {
             Button("設定を開く...") {
                 NSApplication.shared.sendAction(
@@ -35,5 +33,21 @@ struct MenuContentView: View {
             }
         }
         Button("終了") { NSApplication.shared.terminate(nil) }
+    }
+}
+
+@available(macOS 14.0, *)
+private struct OpenSettingsMenuItem: View {
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Button("設定を開く...") {
+            NSApplication.shared.setActivationPolicy(.regular)
+            NSApplication.shared.activate(ignoringOtherApps: true)
+            openSettings()
+            DispatchQueue.main.async {
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            }
+        }
     }
 }
