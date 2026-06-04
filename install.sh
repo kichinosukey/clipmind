@@ -68,8 +68,17 @@ append_path_to_profile_if_needed() {
   echo "Updated shell profile: $profile"
 }
 
+is_git_repo_root() {
+  local resolved_home git_toplevel resolved_toplevel
+  [[ -d "$CLIPMIND_HOME" ]] || return 1
+  resolved_home="$(cd "$CLIPMIND_HOME" && pwd -P)" || return 1
+  git_toplevel="$(git -C "$resolved_home" rev-parse --show-toplevel 2>/dev/null)" || return 1
+  resolved_toplevel="$(cd "$git_toplevel" && pwd -P)" || return 1
+  [[ "$resolved_home" == "$resolved_toplevel" ]]
+}
+
 ensure_clone() {
-  if git -C "$CLIPMIND_HOME" rev-parse --is-inside-work-tree 2>/dev/null | grep -qx true; then
+  if is_git_repo_root; then
     if [[ "${CLIPMIND_SKIP_GIT_UPDATE:-0}" == "1" ]]; then
       echo "Using existing clone (git update skipped): $CLIPMIND_HOME"
       return 0

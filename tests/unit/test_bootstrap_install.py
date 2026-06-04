@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import tempfile
 
 import pytest
 
@@ -66,6 +67,36 @@ class TestBootstrapInstall:
             text=True,
             timeout=300,
         )
+
+        assert result.returncode != 0
+        assert "exists but is not a git repository" in result.stderr
+
+    def test_bootstrap_rejects_subdirectory_inside_repo(self, fake_home):
+        with tempfile.TemporaryDirectory(dir=PROJECT_ROOT) as clipmind_home:
+            fake_python = (
+                PROJECT_ROOT
+                / os.path.basename(clipmind_home)
+                / ".venv"
+                / "bin"
+                / "python"
+            )
+            fake_python.parent.mkdir(parents=True)
+            fake_python.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            fake_python.chmod(0o755)
+            env = {
+                **os.environ,
+                "HOME": str(fake_home),
+                "CLIPMIND_HOME": clipmind_home,
+                "CLIPMIND_SKIP_GIT_UPDATE": "1",
+            }
+            result = subprocess.run(
+                ["bash", str(PROJECT_ROOT / "install.sh")],
+                cwd=PROJECT_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
 
         assert result.returncode != 0
         assert "exists but is not a git repository" in result.stderr
