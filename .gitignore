@@ -211,6 +211,7 @@ data/
 # Local AI workflow (not for publication)
 .handoff/
 .worktrees/
+macos-app/.build/
 docs/superpowers/
 logs/
 .context/
