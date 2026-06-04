@@ -69,7 +69,7 @@ append_path_to_profile_if_needed() {
 }
 
 ensure_clone() {
-  if [[ -d "$CLIPMIND_HOME/.git" ]]; then
+  if git -C "$CLIPMIND_HOME" rev-parse --is-inside-work-tree 2>/dev/null | grep -qx true; then
     if [[ "${CLIPMIND_SKIP_GIT_UPDATE:-0}" == "1" ]]; then
       echo "Using existing clone (git update skipped): $CLIPMIND_HOME"
       return 0
