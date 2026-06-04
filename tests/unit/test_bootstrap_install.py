@@ -1,6 +1,7 @@
 """Tests for install.sh bootstrap (existing clone, no network clone)."""
 
 import os
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -62,6 +63,7 @@ def linked_worktree(tmp_path):
 def feature_repo(tmp_path):
     origin = tmp_path / "origin.git"
     repo = tmp_path / "repo"
+    updater = tmp_path / "updater"
     run_git("init", "--bare", str(origin))
     run_git("init", "--initial-branch=main", str(repo))
     run_git("config", "user.email", "tests@example.com", cwd=repo)
@@ -79,7 +81,27 @@ def feature_repo(tmp_path):
     run_git("remote", "add", "origin", str(origin), cwd=repo)
     run_git("push", "-u", "origin", "main", cwd=repo)
     run_git("switch", "-c", "feature", cwd=repo)
+    run_git("clone", str(origin), str(updater))
+    run_git("config", "user.email", "tests@example.com", cwd=updater)
+    run_git("config", "user.name", "ClipMind Tests", cwd=updater)
+    (updater / "origin-update").touch()
+    run_git("add", "origin-update", cwd=updater)
+    run_git("commit", "-m", "origin update", cwd=updater)
+    run_git("push", "origin", "main", cwd=updater)
     return repo
+
+
+@pytest.fixture
+def linked_feature_worktree(feature_repo, tmp_path):
+    worktree = tmp_path / "linked-feature-worktree"
+    run_git("switch", "main", cwd=feature_repo)
+    run_git("worktree", "add", str(worktree), "feature", cwd=feature_repo)
+    create_fake_python(worktree)
+    try:
+        yield worktree
+    finally:
+        shutil.rmtree(worktree / ".venv")
+        run_git("worktree", "remove", str(worktree), cwd=feature_repo)
 
 
 class TestBootstrapInstall:
@@ -160,7 +182,9 @@ class TestBootstrapInstall:
         assert result.returncode != 0
         assert "exists but is not a git repository" in result.stderr
 
-    def test_bootstrap_fetches_without_switching_feature_branch(self, fake_home, feature_repo):
+    def test_bootstrap_switches_and_pulls_target_branch_in_normal_clone(
+        self, fake_home, feature_repo
+    ):
         env = {
             **os.environ,
             "HOME": str(fake_home),
@@ -177,7 +201,34 @@ class TestBootstrapInstall:
         )
 
         assert result.returncode == 0, result.stderr + result.stdout
-        assert run_git("branch", "--show-current", cwd=feature_repo).stdout.strip() == "feature"
+        assert run_git("branch", "--show-current", cwd=feature_repo).stdout.strip() == "main"
+        assert (feature_repo / "origin-update").is_file()
+
+    def test_bootstrap_fetches_without_switching_linked_feature_worktree(
+        self, fake_home, linked_feature_worktree
+    ):
+        env = {
+            **os.environ,
+            "HOME": str(fake_home),
+            "CLIPMIND_HOME": str(linked_feature_worktree),
+            "CLIPMIND_BRANCH": "main",
+        }
+        result = subprocess.run(
+            ["bash", str(PROJECT_ROOT / "install.sh")],
+            cwd=linked_feature_worktree,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+
+        assert result.returncode == 0, result.stderr + result.stdout
+        assert (
+            run_git("branch", "--show-current", cwd=linked_feature_worktree)
+            .stdout.strip()
+            == "feature"
+        )
+        assert not (linked_feature_worktree / "origin-update").exists()
         assert "current branch is feature; update skipped" in result.stdout
 
     def test_bootstrap_rejects_non_repo_with_ambient_git_environment(

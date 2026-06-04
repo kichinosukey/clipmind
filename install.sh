@@ -79,6 +79,19 @@ is_git_repo_root() {
   [[ "$resolved_home" == "$resolved_toplevel" ]]
 }
 
+is_linked_worktree() {
+  local resolved_home git_dir git_common_dir resolved_git_dir resolved_common_dir
+  resolved_home="$(cd "$CLIPMIND_HOME" && pwd -P)" || return 1
+  git_dir="$(git -C "$resolved_home" rev-parse --absolute-git-dir 2>/dev/null)" || return 1
+  git_common_dir="$(git -C "$resolved_home" rev-parse --git-common-dir 2>/dev/null)" || return 1
+  resolved_git_dir="$(cd "$git_dir" && pwd -P)" || return 1
+  case "$git_common_dir" in
+    /*) resolved_common_dir="$(cd "$git_common_dir" && pwd -P)" || return 1 ;;
+    *) resolved_common_dir="$(cd "$resolved_home/$git_common_dir" && pwd -P)" || return 1 ;;
+  esac
+  [[ "$resolved_git_dir" != "$resolved_common_dir" ]]
+}
+
 ensure_clone() {
   local current_branch
   if is_git_repo_root; then
@@ -91,8 +104,11 @@ ensure_clone() {
     current_branch="$(git -C "$CLIPMIND_HOME" branch --show-current)"
     if [[ "$current_branch" == "$CLIPMIND_BRANCH" ]]; then
       git -C "$CLIPMIND_HOME" pull --ff-only origin "$CLIPMIND_BRANCH"
-    else
+    elif is_linked_worktree; then
       echo "Fetched $CLIPMIND_BRANCH; current branch is ${current_branch:-detached}; update skipped."
+    else
+      git -C "$CLIPMIND_HOME" checkout "$CLIPMIND_BRANCH"
+      git -C "$CLIPMIND_HOME" pull --ff-only origin "$CLIPMIND_BRANCH"
     fi
     return 0
   fi
