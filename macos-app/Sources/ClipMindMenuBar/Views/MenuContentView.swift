@@ -22,9 +22,17 @@ struct MenuContentView: View {
             Text("直近: \(recent.stage.label) \(recent.title ?? "")")
         }
         Divider()
-        Button("設定を開く...") {
-            NSApplication.shared.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-            NSApplication.shared.activate(ignoringOtherApps: true)
+        if #available(macOS 14.0, *) {
+            SettingsLink {
+                Text("設定を開く...")
+            }
+        } else {
+            Button("設定を開く...") {
+                NSApplication.shared.sendAction(
+                    Selector(("showSettingsWindow:")), to: nil, from: nil
+                )
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            }
         }
         Button("終了") { NSApplication.shared.terminate(nil) }
     }
