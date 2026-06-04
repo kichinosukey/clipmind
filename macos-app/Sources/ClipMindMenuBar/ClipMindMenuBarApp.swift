@@ -11,6 +11,7 @@ struct ClipMindMenuBarApp: App {
                 .environmentObject(jobs)
                 .environmentObject(settings)
         }
+        .menuBarExtraStyle(.window)
         Settings {
             SettingsView()
                 .environmentObject(jobs)
