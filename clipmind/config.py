@@ -81,10 +81,15 @@ def _app_profile(raw: dict[str, Any], app_id: str) -> dict[str, Any]:
     return profile
 
 
-def _app_settings(raw: dict[str, Any], app_id: str) -> dict[str, Any]:
-    settings = _app_profile(raw, app_id).get("settings")
+def _app_settings(raw: dict[str, Any], app_id: str) -> dict[str, Any] | None:
+    profile = _app_profile(raw, app_id)
+    if "settings" not in profile:
+        return None
+    settings = profile["settings"]
     if not isinstance(settings, dict):
-        return {}
+        raise ConfigError(
+            f"Configuration field appProfiles.{app_id}.settings must be an object"
+        )
     return settings
 
 
@@ -96,19 +101,14 @@ def _active_preset_id(raw: dict[str, Any], app_id: str) -> str:
     return _required_text(raw, "activePresetId")
 
 
-def _prompt_text(
-    settings: dict[str, Any],
+def _prompt_source(
+    settings: dict[str, Any] | None,
     legacy_preset: dict[str, Any],
-    field: str,
     context: str,
-) -> str:
-    if field in settings:
-        return _required_text(settings, field, context)
-    return _required_text(
-        legacy_preset,
-        field,
-        f"presets.{legacy_preset['id']}",
-    )
+) -> tuple[dict[str, Any], str]:
+    if settings is not None:
+        return settings, context
+    return legacy_preset, f"presets.{legacy_preset['id']}"
 
 
 def _load_secret(store: SecretStore, reference: str) -> str:
@@ -164,33 +164,34 @@ def load_runtime_config(
 
     api_key_ref = _required_text(active, "apiKeyRef", f"presets.{active_id}")
     clipmind_settings = _app_settings(raw, CLIPMIND_APP_ID)
+    prompt_source, prompt_context = _prompt_source(
+        clipmind_settings,
+        active,
+        f"appProfiles.{CLIPMIND_APP_ID}.settings",
+    )
     preset_values = {
         "name": _required_text(active, "name", f"presets.{active_id}"),
         "base_url": _required_text(active, "baseURL", f"presets.{active_id}"),
         "model": _required_text(active, "model", f"presets.{active_id}"),
-        "summarize_system_prompt": _prompt_text(
-            clipmind_settings,
-            active,
+        "summarize_system_prompt": _required_text(
+            prompt_source,
             "summarizeSystemPrompt",
-            f"appProfiles.{CLIPMIND_APP_ID}.settings",
+            prompt_context,
         ),
-        "summarize_user_prompt": _prompt_text(
-            clipmind_settings,
-            active,
+        "summarize_user_prompt": _required_text(
+            prompt_source,
             "summarizeUserPrompt",
-            f"appProfiles.{CLIPMIND_APP_ID}.settings",
+            prompt_context,
         ),
-        "translate_system_prompt": _prompt_text(
-            clipmind_settings,
-            active,
+        "translate_system_prompt": _required_text(
+            prompt_source,
             "translateSystemPrompt",
-            f"appProfiles.{CLIPMIND_APP_ID}.settings",
+            prompt_context,
         ),
-        "translate_user_prompt": _prompt_text(
-            clipmind_settings,
-            active,
+        "translate_user_prompt": _required_text(
+            prompt_source,
             "translateUserPrompt",
-            f"appProfiles.{CLIPMIND_APP_ID}.settings",
+            prompt_context,
         ),
     }
 

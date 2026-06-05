@@ -135,6 +135,35 @@ def test_load_runtime_config_keeps_legacy_preset_prompt_fallback(tmp_path):
     assert runtime.preset.translate_user_prompt == "legacy translate {text}"
 
 
+def test_load_runtime_config_rejects_incomplete_clipmind_settings_even_with_legacy_prompts(
+    tmp_path,
+):
+    def mutate(data):
+        data["presets"][0].update(
+            summarizeSystemPrompt="legacy summarize system",
+            summarizeUserPrompt="legacy summary {text}",
+            translateSystemPrompt="legacy translate system",
+            translateUserPrompt="legacy translate {text}",
+        )
+        data["appProfiles"]["clipmind"]["settings"].pop("translateUserPrompt")
+
+    with pytest.raises(ConfigError, match="translateUserPrompt"):
+        load_runtime_config(
+            write_config(tmp_path, mutate),
+            FakeSecrets({"quality-api": "api-secret", "discord-hook": "discord-secret"}),
+        )
+
+
+def test_load_runtime_config_rejects_non_object_clipmind_settings(tmp_path):
+    path = write_config(
+        tmp_path,
+        lambda data: data["appProfiles"]["clipmind"].update(settings="invalid"),
+    )
+
+    with pytest.raises(ConfigError, match=r"appProfiles\.clipmind\.settings"):
+        load_runtime_config(path, FakeSecrets({"quality-api": "api-secret"}))
+
+
 def test_load_runtime_config_falls_back_to_global_when_clipmind_profile_empty(tmp_path):
     path = write_config(
         tmp_path,
