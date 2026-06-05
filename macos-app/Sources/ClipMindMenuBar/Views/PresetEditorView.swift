@@ -11,6 +11,9 @@ struct PresetEditorView: View {
             }
             .frame(width: 180)
             VStack(alignment: .leading) {
+                Text("LLM presets are shared by ClipMind and other personal local AI tools.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 if let index = settings.config.presets.firstIndex(where: {
                     $0.id == settings.config.activePresetId
                 }) {

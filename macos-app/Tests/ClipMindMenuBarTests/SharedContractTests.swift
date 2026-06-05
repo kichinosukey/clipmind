@@ -18,6 +18,42 @@ final class SharedContractTests: XCTestCase {
         XCTAssertEqual(config.presets.first?.model, "model-a")
     }
 
+    func testPresetContractContainsExternalLLMFields() throws {
+        let json = """
+        {
+          "schemaVersion": 1,
+          "activePresetId": "preset-1",
+          "presets": [
+            {
+              "id": "preset-1",
+              "name": "Shared Local",
+              "baseURL": "http://localhost:1234/v1",
+              "model": "qwen3-8b-mlx",
+              "apiKeyRef": "preset-1-api-key",
+              "summarizeSystemPrompt": "",
+              "summarizeUserPrompt": "",
+              "translateSystemPrompt": "",
+              "translateUserPrompt": ""
+            }
+          ],
+          "shared": {
+            "whisperBinaryPath": "/opt/homebrew/bin/whisper-cli",
+            "whisperModelPath": "/tmp/ggml-base.en.bin",
+            "outputRoot": "/tmp/out",
+            "enabledDestinations": []
+          }
+        }
+        """.data(using: .utf8)!
+
+        let config = try JSONDecoder().decode(ClipMindConfig.self, from: json)
+        let preset = try XCTUnwrap(config.presets.first)
+
+        XCTAssertEqual(config.activePresetId, "preset-1")
+        XCTAssertEqual(preset.baseURL, "http://localhost:1234/v1")
+        XCTAssertEqual(preset.model, "qwen3-8b-mlx")
+        XCTAssertEqual(preset.apiKeyRef, "preset-1-api-key")
+    }
+
     func testDecodesSharedJobFixtures() throws {
         let active = try JSONDecoder().decode(
             JobStatus.self, from: Data(contentsOf: fixture("job-active-v1.json"))

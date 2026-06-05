@@ -6,7 +6,7 @@ struct SettingsView: View {
 
     var body: some View {
         TabView {
-            PresetEditorView().tabItem { Label("Presets", systemImage: "slider.horizontal.3") }
+            PresetEditorView().tabItem { Label("LLM Presets", systemImage: "slider.horizontal.3") }
             SharedSettingsView().tabItem { Label("Shared", systemImage: "gearshape") }
             StatusView().tabItem { Label("Status", systemImage: "waveform.path.ecg") }
         }
