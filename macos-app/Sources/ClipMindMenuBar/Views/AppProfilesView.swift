@@ -46,6 +46,7 @@ struct AppProfilesView: View {
             }
 
             Button("Save") { settings.save() }
+            if let error = settings.errorMessage { Text(error).foregroundStyle(.red) }
         }
         .padding()
     }
@@ -74,8 +75,9 @@ struct AppProfilesView: View {
                 settings.meetingSummarySettings[keyPath: keyPath].map(String.init) ?? ""
             },
             set: { value in
+                let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
                 var appSettings = settings.meetingSummarySettings
-                appSettings[keyPath: keyPath] = Int(value)
+                appSettings[keyPath: keyPath] = trimmedValue.isEmpty ? nil : Int(trimmedValue)
                 settings.meetingSummarySettings = appSettings
             }
         )
