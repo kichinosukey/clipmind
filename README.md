@@ -2,7 +2,7 @@
 
 YouTube URL を Whisper.cpp で文字起こしし、OpenAI 互換 API で要約・翻訳して、必要に応じて Discord / Slack に投稿する macOS 向けツールです。
 
-設定は Menu Bar アプリで管理します。CLI、Alfred、Chrome 右クリックのどこから実行しても、その時点のアクティブなプリセットを使用します。Menu Bar アプリを終了していても処理は実行できます。
+設定は Menu Bar アプリで管理します。CLI、Alfred、Chrome 右クリックのどこから実行しても、Apps 設定で ClipMind に割り当てた LLM プリセットを使用します。割り当てが未設定ならグローバルのアクティブプリセットに戻ります。Menu Bar アプリを終了していても処理は実行できます。
 
 ## 構成
 
@@ -77,10 +77,11 @@ swift run --package-path macos-app ClipMindMenuBar
 
 設定画面で次を手作業で入力して保存します。
 
-1. Presets で OpenAI 互換 API の Base URL、モデル、要約・翻訳プロンプトを設定する
+1. LLM Presets で OpenAI 互換 API の Base URL、モデル、要約・翻訳プロンプトを設定する
 2. API key を保存する
-3. Shared で `whisper-cli`、Whisper モデル、出力先の絶対パスを設定する
-4. 必要なら Discord / Slack を有効化し、Webhook を保存する
+3. Apps で ClipMind / Meeting Summary それぞれに使う LLM プリセットを選ぶ
+4. Shared で `whisper-cli`、Whisper モデル、出力先の絶対パスを設定する
+5. 必要なら Discord / Slack を有効化し、Webhook を保存する
 
 旧 `.env` は自動読込・自動移行されません。値を確認しながら Menu Bar アプリへ手作業で移してください。
 
@@ -114,7 +115,7 @@ clipmind-run "https://www.youtube.com/watch?v=UF8uR6Z6KLc"
 clipmind-repair <extension-id>
 ```
 
-Chrome を完全に再起動すると、YouTube ページまたは YouTube リンクの右クリックから「clipmindで要約」を実行できます。Chrome、Alfred、CLI はすべて共有設定のアクティブプリセットを使います。
+Chrome を完全に再起動すると、YouTube ページまたは YouTube リンクの右クリックから「clipmindで要約」を実行できます。Chrome、Alfred、CLI はすべて共有設定の ClipMind 用 LLM プリセットを使います。
 
 ## Alfred
 
@@ -141,6 +142,14 @@ Chrome を完全に再起動すると、YouTube ページまたは YouTube リ�
       "translateUserPrompt": "{text}"
     }
   ],
+  "appProfiles": {
+    "clipmind": {
+      "activePresetId": "quality"
+    },
+    "meeting-summary-local-llm": {
+      "activePresetId": ""
+    }
+  },
   "shared": {
     "whisperBinaryPath": "/absolute/path/to/whisper-cli",
     "whisperModelPath": "/absolute/path/to/ggml-base.en.bin",
