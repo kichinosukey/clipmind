@@ -71,15 +71,44 @@ def _optional_reference(data: dict[str, Any], field: str) -> str | None:
     return value
 
 
-def _active_preset_id(raw: dict[str, Any], app_id: str) -> str:
+def _app_profile(raw: dict[str, Any], app_id: str) -> dict[str, Any]:
     app_profiles = raw.get("appProfiles")
-    if isinstance(app_profiles, dict):
-        profile = app_profiles.get(app_id)
-        if isinstance(profile, dict):
-            app_active = profile.get("activePresetId")
-            if isinstance(app_active, str) and app_active.strip():
-                return app_active
+    if not isinstance(app_profiles, dict):
+        return {}
+    profile = app_profiles.get(app_id)
+    if not isinstance(profile, dict):
+        return {}
+    return profile
+
+
+def _app_settings(raw: dict[str, Any], app_id: str) -> dict[str, Any]:
+    settings = _app_profile(raw, app_id).get("settings")
+    if not isinstance(settings, dict):
+        return {}
+    return settings
+
+
+def _active_preset_id(raw: dict[str, Any], app_id: str) -> str:
+    profile = _app_profile(raw, app_id)
+    app_active = profile.get("activePresetId")
+    if isinstance(app_active, str) and app_active.strip():
+        return app_active
     return _required_text(raw, "activePresetId")
+
+
+def _prompt_text(
+    settings: dict[str, Any],
+    legacy_preset: dict[str, Any],
+    field: str,
+    context: str,
+) -> str:
+    if field in settings:
+        return _required_text(settings, field, context)
+    return _required_text(
+        legacy_preset,
+        field,
+        f"presets.{legacy_preset['id']}",
+    )
 
 
 def _load_secret(store: SecretStore, reference: str) -> str:
@@ -134,21 +163,34 @@ def load_runtime_config(
         raise ConfigError(f"activePresetId does not match a preset: {active_id}")
 
     api_key_ref = _required_text(active, "apiKeyRef", f"presets.{active_id}")
+    clipmind_settings = _app_settings(raw, CLIPMIND_APP_ID)
     preset_values = {
         "name": _required_text(active, "name", f"presets.{active_id}"),
         "base_url": _required_text(active, "baseURL", f"presets.{active_id}"),
         "model": _required_text(active, "model", f"presets.{active_id}"),
-        "summarize_system_prompt": _required_text(
-            active, "summarizeSystemPrompt", f"presets.{active_id}"
+        "summarize_system_prompt": _prompt_text(
+            clipmind_settings,
+            active,
+            "summarizeSystemPrompt",
+            f"appProfiles.{CLIPMIND_APP_ID}.settings",
         ),
-        "summarize_user_prompt": _required_text(
-            active, "summarizeUserPrompt", f"presets.{active_id}"
+        "summarize_user_prompt": _prompt_text(
+            clipmind_settings,
+            active,
+            "summarizeUserPrompt",
+            f"appProfiles.{CLIPMIND_APP_ID}.settings",
         ),
-        "translate_system_prompt": _required_text(
-            active, "translateSystemPrompt", f"presets.{active_id}"
+        "translate_system_prompt": _prompt_text(
+            clipmind_settings,
+            active,
+            "translateSystemPrompt",
+            f"appProfiles.{CLIPMIND_APP_ID}.settings",
         ),
-        "translate_user_prompt": _required_text(
-            active, "translateUserPrompt", f"presets.{active_id}"
+        "translate_user_prompt": _prompt_text(
+            clipmind_settings,
+            active,
+            "translateUserPrompt",
+            f"appProfiles.{CLIPMIND_APP_ID}.settings",
         ),
     }
 

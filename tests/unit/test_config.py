@@ -32,6 +32,11 @@ def write_config(tmp_path, mutate=None):
     return path
 
 
+def use_missing_global_active_preset(data):
+    data.pop("appProfiles", None)
+    data.update(activePresetId="missing")
+
+
 def test_load_runtime_config_resolves_active_preset_and_secrets(tmp_path):
     runtime = load_runtime_config(
         write_config(tmp_path),
@@ -58,7 +63,10 @@ def test_load_runtime_config_uses_clipmind_app_profile(tmp_path):
             }
         )
         data["appProfiles"] = {
-            "clipmind": {"activePresetId": "clipmind-fast"},
+            "clipmind": {
+                "activePresetId": "clipmind-fast",
+                "settings": data["appProfiles"]["clipmind"]["settings"],
+            },
             "meeting-summary-local-llm": {"activePresetId": data["activePresetId"]},
         }
 
@@ -74,10 +82,63 @@ def test_load_runtime_config_uses_clipmind_app_profile(tmp_path):
     assert runtime.preset.api_key == "clipmind-fast-key"
 
 
+def test_load_runtime_config_reads_clipmind_prompts_from_app_profile_settings(tmp_path):
+    def mutate(data):
+        for field in (
+            "summarizeSystemPrompt",
+            "summarizeUserPrompt",
+            "translateSystemPrompt",
+            "translateUserPrompt",
+        ):
+            data["presets"][0].pop(field, None)
+        data["appProfiles"] = {
+            "clipmind": {
+                "activePresetId": "quality",
+                "settings": {
+                    "summarizeSystemPrompt": "profile summarize system",
+                    "summarizeUserPrompt": "profile summary {text}",
+                    "translateSystemPrompt": "profile translate system",
+                    "translateUserPrompt": "profile translate {text}",
+                },
+            }
+        }
+
+    runtime = load_runtime_config(
+        write_config(tmp_path, mutate),
+        FakeSecrets({"quality-api": "api-secret", "discord-hook": "discord-secret"}),
+    )
+
+    assert runtime.preset.summarize_system_prompt == "profile summarize system"
+    assert runtime.preset.summarize_user_prompt == "profile summary {text}"
+    assert runtime.preset.translate_system_prompt == "profile translate system"
+    assert runtime.preset.translate_user_prompt == "profile translate {text}"
+
+
+def test_load_runtime_config_keeps_legacy_preset_prompt_fallback(tmp_path):
+    def mutate(data):
+        data.pop("appProfiles", None)
+        data["presets"][0].update(
+            summarizeSystemPrompt="legacy summarize system",
+            summarizeUserPrompt="legacy summary {text}",
+            translateSystemPrompt="legacy translate system",
+            translateUserPrompt="legacy translate {text}",
+        )
+
+    runtime = load_runtime_config(
+        write_config(tmp_path, mutate),
+        FakeSecrets({"quality-api": "api-secret", "discord-hook": "discord-secret"}),
+    )
+
+    assert runtime.preset.summarize_system_prompt == "legacy summarize system"
+    assert runtime.preset.summarize_user_prompt == "legacy summary {text}"
+    assert runtime.preset.translate_system_prompt == "legacy translate system"
+    assert runtime.preset.translate_user_prompt == "legacy translate {text}"
+
+
 def test_load_runtime_config_falls_back_to_global_when_clipmind_profile_empty(tmp_path):
     path = write_config(
         tmp_path,
-        lambda data: data.update(appProfiles={"clipmind": {"activePresetId": ""}}),
+        lambda data: data["appProfiles"]["clipmind"].update(activePresetId=""),
     )
 
     runtime = load_runtime_config(
@@ -103,10 +164,12 @@ def test_load_runtime_config_rejects_missing_clipmind_app_profile_preset(tmp_pat
     ("mutate", "message"),
     [
         (lambda data: data.update(schemaVersion=2), "schemaVersion"),
-        (lambda data: data.update(activePresetId="missing"), "activePresetId"),
+        (use_missing_global_active_preset, "activePresetId"),
         (lambda data: data["presets"].append(data["presets"][0].copy()), "presets"),
         (
-            lambda data: data["presets"][0].update(summarizeUserPrompt=""),
+            lambda data: data["appProfiles"]["clipmind"]["settings"].update(
+                summarizeUserPrompt=""
+            ),
             "summarizeUserPrompt",
         ),
         (

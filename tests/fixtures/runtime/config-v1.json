@@ -7,13 +7,20 @@
       "name": "Quality",
       "baseURL": "http://localhost:1234/v1",
       "model": "model-a",
-      "apiKeyRef": "quality-api",
-      "summarizeSystemPrompt": "summarize system",
-      "summarizeUserPrompt": "summary {text}",
-      "translateSystemPrompt": "translate system",
-      "translateUserPrompt": "translate {text}"
+      "apiKeyRef": "quality-api"
     }
   ],
+  "appProfiles": {
+    "clipmind": {
+      "activePresetId": "quality",
+      "settings": {
+        "summarizeSystemPrompt": "summarize system",
+        "summarizeUserPrompt": "summary {text}",
+        "translateSystemPrompt": "translate system",
+        "translateUserPrompt": "translate {text}"
+      }
+    }
+  },
   "shared": {
     "whisperBinaryPath": "/opt/homebrew/bin/whisper-cli",
     "whisperModelPath": "/models/base.bin",
