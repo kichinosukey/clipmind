@@ -46,6 +46,59 @@ def test_load_runtime_config_resolves_active_preset_and_secrets(tmp_path):
     assert runtime.secrets == ["api-secret", "discord-secret"]
 
 
+def test_load_runtime_config_uses_clipmind_app_profile(tmp_path):
+    def mutate(data):
+        data["presets"].append(
+            {
+                **data["presets"][0],
+                "id": "clipmind-fast",
+                "name": "ClipMind Fast",
+                "model": "fast-model",
+                "apiKeyRef": "clipmind-fast-api",
+            }
+        )
+        data["appProfiles"] = {
+            "clipmind": {"activePresetId": "clipmind-fast"},
+            "meeting-summary-local-llm": {"activePresetId": data["activePresetId"]},
+        }
+
+    runtime = load_runtime_config(
+        write_config(tmp_path, mutate),
+        FakeSecrets(
+            {"clipmind-fast-api": "clipmind-fast-key", "discord-hook": "discord-secret"}
+        ),
+    )
+
+    assert runtime.preset.id == "clipmind-fast"
+    assert runtime.preset.model == "fast-model"
+    assert runtime.preset.api_key == "clipmind-fast-key"
+
+
+def test_load_runtime_config_falls_back_to_global_when_clipmind_profile_empty(tmp_path):
+    path = write_config(
+        tmp_path,
+        lambda data: data.update(appProfiles={"clipmind": {"activePresetId": ""}}),
+    )
+
+    runtime = load_runtime_config(
+        path,
+        FakeSecrets({"quality-api": "api-secret", "discord-hook": "discord-secret"}),
+    )
+
+    assert runtime.preset.id == "quality"
+    assert runtime.preset.model == "model-a"
+
+
+def test_load_runtime_config_rejects_missing_clipmind_app_profile_preset(tmp_path):
+    path = write_config(
+        tmp_path,
+        lambda data: data.update(appProfiles={"clipmind": {"activePresetId": "missing"}}),
+    )
+
+    with pytest.raises(ConfigError, match="activePresetId"):
+        load_runtime_config(path, FakeSecrets({"quality-api": "api-secret"}))
+
+
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [

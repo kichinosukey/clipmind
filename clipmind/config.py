@@ -11,6 +11,7 @@ from clipmind.paths import CONFIG_PATH
 from clipmind.secrets import KeychainSecretStore, SecretLookupError, SecretStore
 
 SUPPORTED_DESTINATIONS = {"discord", "slack"}
+CLIPMIND_APP_ID = "clipmind"
 
 
 class ConfigError(RuntimeError):
@@ -70,6 +71,17 @@ def _optional_reference(data: dict[str, Any], field: str) -> str | None:
     return value
 
 
+def _active_preset_id(raw: dict[str, Any], app_id: str) -> str:
+    app_profiles = raw.get("appProfiles")
+    if isinstance(app_profiles, dict):
+        profile = app_profiles.get(app_id)
+        if isinstance(profile, dict):
+            app_active = profile.get("activePresetId")
+            if isinstance(app_active, str) and app_active.strip():
+                return app_active
+    return _required_text(raw, "activePresetId")
+
+
 def _load_secret(store: SecretStore, reference: str) -> str:
     try:
         return store.get(reference)
@@ -116,7 +128,7 @@ def load_runtime_config(
     if len(preset_ids) != len(set(preset_ids)):
         raise ConfigError("Configuration field presets contains duplicate IDs")
 
-    active_id = _required_text(raw, "activePresetId")
+    active_id = _active_preset_id(raw, CLIPMIND_APP_ID)
     active = next((preset for preset in presets if preset["id"] == active_id), None)
     if active is None:
         raise ConfigError(f"activePresetId does not match a preset: {active_id}")
