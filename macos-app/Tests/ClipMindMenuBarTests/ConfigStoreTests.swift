@@ -81,6 +81,35 @@ final class ConfigStoreTests: XCTestCase {
         XCTAssertNoThrow(try ConfigStore.validate(config))
     }
 
+    func testValidationRejectsEmptyClipMindPromptSettings() throws {
+        var (config, root) = try validConfig()
+        defer { try? FileManager.default.removeItem(at: root) }
+        config.appProfiles["clipmind"] = AppProfile(
+            activePresetId: config.activePresetId,
+            settings: AppProfileSettings(
+                summarizeSystemPrompt: "",
+                summarizeUserPrompt: "{text}",
+                translateSystemPrompt: "translate",
+                translateUserPrompt: "{text}",
+                timeout: nil,
+                contextLength: nil
+            )
+        )
+
+        XCTAssertThrowsError(try ConfigStore.validate(config))
+    }
+
+    func testValidationAcceptsMeetingSummarySettings() throws {
+        var (config, root) = try validConfig()
+        defer { try? FileManager.default.removeItem(at: root) }
+        config.appProfiles["meeting-summary-local-llm"] = AppProfile(
+            activePresetId: "",
+            settings: AppProfileSettings(timeout: 900, contextLength: 32768)
+        )
+
+        XCTAssertNoThrow(try ConfigStore.validate(config))
+    }
+
     func testValidationRejectsMissingAppProfilePresetReference() throws {
         var (config, root) = try validConfig()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -161,6 +190,19 @@ final class SettingsViewModelTests: XCTestCase {
             viewModel.config.appProfiles["clipmind"],
             AppProfile(activePresetId: "", settings: .defaultClipMind)
         )
+    }
+
+    func testClipMindSettingsHelperCreatesDefaults() throws {
+        let viewModel = SettingsViewModel()
+        let source = Preset(
+            id: "source", name: "Quality", baseURL: "http://localhost:1234/v1",
+            model: "model-a", apiKeyRef: "source-api"
+        )
+        viewModel.config.presets = [source]
+        viewModel.config.activePresetId = source.id
+        viewModel.config.appProfiles = [:]
+
+        XCTAssertEqual(viewModel.clipMindSettings.summarizeUserPrompt, "{text}")
     }
 
     func testDuplicatePresetCreatesIndependentIdentityAndSelectsIt() {

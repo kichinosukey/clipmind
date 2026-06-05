@@ -48,6 +48,19 @@ struct ConfigStore {
                 throw ConfigStoreError.invalid("App profile preset is missing")
             }
         }
+        if let settings = config.appProfiles["clipmind"]?.settings {
+            let clipMindPrompts = [
+                settings.summarizeSystemPrompt,
+                settings.summarizeUserPrompt,
+                settings.translateSystemPrompt,
+                settings.translateUserPrompt,
+            ]
+            guard clipMindPrompts.allSatisfy({
+                !$0.orEmpty.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }) else {
+                throw ConfigStoreError.invalid("ClipMind prompts must not be empty")
+            }
+        }
         let supported = Set(["discord", "slack"])
         guard Set(config.shared.enabledDestinations).count == config.shared.enabledDestinations.count else {
             throw ConfigStoreError.invalid("Destinations must be unique")
@@ -78,5 +91,11 @@ struct ConfigStore {
               isDirectory.boolValue else {
             throw ConfigStoreError.invalid("Output directory is missing")
         }
+    }
+}
+
+private extension Optional where Wrapped == String {
+    var orEmpty: String {
+        self ?? ""
     }
 }

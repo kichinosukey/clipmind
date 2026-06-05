@@ -35,6 +35,29 @@ final class SettingsViewModel: ObservableObject {
         config.presets.first { $0.id == config.activePresetId }
     }
 
+    var clipMindSettings: AppProfileSettings {
+        get {
+            config.appProfiles["clipmind"]?.settings ?? .defaultClipMind
+        }
+        set {
+            let activePresetId = config.appProfiles["clipmind"]?.activePresetId ?? ""
+            config.appProfiles["clipmind"] = AppProfile(activePresetId: activePresetId, settings: newValue)
+        }
+    }
+
+    var meetingSummarySettings: AppProfileSettings {
+        get {
+            config.appProfiles["meeting-summary-local-llm"]?.settings ?? AppProfileSettings()
+        }
+        set {
+            let activePresetId = config.appProfiles["meeting-summary-local-llm"]?.activePresetId ?? ""
+            config.appProfiles["meeting-summary-local-llm"] = AppProfile(
+                activePresetId: activePresetId,
+                settings: newValue
+            )
+        }
+    }
+
     func selectPreset(_ id: String) {
         config.activePresetId = id
         save()
