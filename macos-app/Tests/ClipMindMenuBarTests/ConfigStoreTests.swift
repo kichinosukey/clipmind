@@ -117,6 +117,52 @@ final class ConfigStoreTests: XCTestCase {
 
 @MainActor
 final class SettingsViewModelTests: XCTestCase {
+    func testAddPresetPreservesExistingClipMindAppProfile() {
+        let viewModel = SettingsViewModel()
+        let source = Preset(
+            id: "source", name: "Quality", baseURL: "http://localhost:1234/v1",
+            model: "model-a", apiKeyRef: "source-api"
+        )
+        let settings = AppProfileSettings(
+            summarizeSystemPrompt: "custom summary system",
+            summarizeUserPrompt: "custom {text}",
+            translateSystemPrompt: "custom translate system",
+            translateUserPrompt: "custom translate {text}"
+        )
+        let profile = AppProfile(activePresetId: "", settings: settings)
+        viewModel.config.presets = [source]
+        viewModel.config.activePresetId = source.id
+        viewModel.config.appProfiles = ["clipmind": profile]
+
+        viewModel.addPreset()
+
+        XCTAssertEqual(viewModel.config.presets.count, 2)
+        XCTAssertNotEqual(viewModel.config.activePresetId, source.id)
+        XCTAssertEqual(viewModel.config.presets.last?.id, viewModel.config.activePresetId)
+        XCTAssertEqual(viewModel.config.appProfiles["clipmind"], profile)
+    }
+
+    func testAddPresetInitializesMissingClipMindProfileWithoutForcingPreset() {
+        let viewModel = SettingsViewModel()
+        let source = Preset(
+            id: "source", name: "Quality", baseURL: "http://localhost:1234/v1",
+            model: "model-a", apiKeyRef: "source-api"
+        )
+        viewModel.config.presets = [source]
+        viewModel.config.activePresetId = source.id
+        viewModel.config.appProfiles = [:]
+
+        viewModel.addPreset()
+
+        XCTAssertEqual(viewModel.config.presets.count, 2)
+        XCTAssertNotEqual(viewModel.config.activePresetId, source.id)
+        XCTAssertEqual(viewModel.config.presets.last?.id, viewModel.config.activePresetId)
+        XCTAssertEqual(
+            viewModel.config.appProfiles["clipmind"],
+            AppProfile(activePresetId: "", settings: .defaultClipMind)
+        )
+    }
+
     func testDuplicatePresetCreatesIndependentIdentityAndSelectsIt() {
         let viewModel = SettingsViewModel()
         let source = Preset(

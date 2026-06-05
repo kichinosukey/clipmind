@@ -57,7 +57,9 @@ final class SettingsViewModel: ObservableObject {
             model: "", apiKeyRef: "preset-\(id)-api-key"
         ))
         config.activePresetId = id
-        config.appProfiles["clipmind"] = AppProfile(activePresetId: id, settings: .defaultClipMind)
+        if config.appProfiles["clipmind"] == nil {
+            config.appProfiles["clipmind"] = AppProfile(activePresetId: "", settings: .defaultClipMind)
+        }
     }
 
     func duplicatePreset(_ source: Preset) {
