@@ -110,6 +110,20 @@ final class ConfigStoreTests: XCTestCase {
         XCTAssertNoThrow(try ConfigStore.validate(config))
     }
 
+    @MainActor
+    func testClipMindSettingsHelperCreatesDefaults() throws {
+        let viewModel = SettingsViewModel()
+        let source = Preset(
+            id: "source", name: "Quality", baseURL: "http://localhost:1234/v1",
+            model: "model-a", apiKeyRef: "source-api"
+        )
+        viewModel.config.presets = [source]
+        viewModel.config.activePresetId = source.id
+        viewModel.config.appProfiles = [:]
+
+        XCTAssertEqual(viewModel.clipMindSettings.summarizeUserPrompt, "{text}")
+    }
+
     func testValidationRejectsMissingAppProfilePresetReference() throws {
         var (config, root) = try validConfig()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -190,19 +204,6 @@ final class SettingsViewModelTests: XCTestCase {
             viewModel.config.appProfiles["clipmind"],
             AppProfile(activePresetId: "", settings: .defaultClipMind)
         )
-    }
-
-    func testClipMindSettingsHelperCreatesDefaults() throws {
-        let viewModel = SettingsViewModel()
-        let source = Preset(
-            id: "source", name: "Quality", baseURL: "http://localhost:1234/v1",
-            model: "model-a", apiKeyRef: "source-api"
-        )
-        viewModel.config.presets = [source]
-        viewModel.config.activePresetId = source.id
-        viewModel.config.appProfiles = [:]
-
-        XCTAssertEqual(viewModel.clipMindSettings.summarizeUserPrompt, "{text}")
     }
 
     func testDuplicatePresetCreatesIndependentIdentityAndSelectsIt() {
