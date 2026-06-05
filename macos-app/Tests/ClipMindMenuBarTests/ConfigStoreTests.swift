@@ -41,6 +41,19 @@ final class ConfigStoreTests: XCTestCase {
         XCTAssertEqual(try store.load(), config)
     }
 
+    func testSaveMaterializesClipMindSettingsWhenMissing() throws {
+        var (config, root) = try validConfig()
+        defer { try? FileManager.default.removeItem(at: root) }
+        config.appProfiles.removeValue(forKey: "clipmind")
+        let store = ConfigStore(configURL: root.appendingPathComponent("config.json"))
+
+        try store.save(config)
+
+        let loaded = try store.load()
+        XCTAssertEqual(loaded.appProfiles["clipmind"]?.activePresetId, "")
+        XCTAssertEqual(loaded.appProfiles["clipmind"]?.settings, .defaultClipMind)
+    }
+
     func testValidationRejectsMissingActivePreset() {
         XCTAssertThrowsError(try ConfigStore.validate(.empty))
     }

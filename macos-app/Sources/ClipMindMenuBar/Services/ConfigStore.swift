@@ -15,6 +15,7 @@ struct ConfigStore {
     }
 
     func save(_ config: ClipMindConfig) throws {
+        let config = Self.materializedForSave(config)
         try Self.validate(config)
         try FileManager.default.createDirectory(
             at: configURL.deletingLastPathComponent(),
@@ -91,6 +92,18 @@ struct ConfigStore {
               isDirectory.boolValue else {
             throw ConfigStoreError.invalid("Output directory is missing")
         }
+    }
+
+    static func materializedForSave(_ config: ClipMindConfig) -> ClipMindConfig {
+        var config = config
+        if config.appProfiles["clipmind"]?.settings == nil {
+            let activePresetId = config.appProfiles["clipmind"]?.activePresetId ?? ""
+            config.appProfiles["clipmind"] = AppProfile(
+                activePresetId: activePresetId,
+                settings: .defaultClipMind
+            )
+        }
+        return config
     }
 }
 
