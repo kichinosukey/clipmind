@@ -68,6 +68,53 @@ final class ConfigStoreTests: XCTestCase {
 
         XCTAssertThrowsError(try ConfigStore.validate(config))
     }
+
+    func testValidationAcceptsAppProfilePresetReferences() throws {
+        var (config, root) = try validConfig()
+        defer { try? FileManager.default.removeItem(at: root) }
+        config.appProfiles = [
+            "clipmind": AppProfile(activePresetId: config.activePresetId),
+            "meeting-summary-local-llm": AppProfile(activePresetId: "")
+        ]
+
+        XCTAssertNoThrow(try ConfigStore.validate(config))
+    }
+
+    func testValidationRejectsMissingAppProfilePresetReference() throws {
+        var (config, root) = try validConfig()
+        defer { try? FileManager.default.removeItem(at: root) }
+        config.appProfiles = [
+            "clipmind": AppProfile(activePresetId: "missing")
+        ]
+
+        XCTAssertThrowsError(try ConfigStore.validate(config))
+    }
+
+    @MainActor
+    func testDeletePresetClearsAppSpecificReference() {
+        let viewModel = SettingsViewModel()
+        let first = Preset(
+            id: "first", name: "First", baseURL: "http://localhost:1234/v1",
+            model: "model-a", apiKeyRef: "first-api",
+            summarizeSystemPrompt: "summary", summarizeUserPrompt: "{text}",
+            translateSystemPrompt: "translate", translateUserPrompt: "{text}"
+        )
+        let second = Preset(
+            id: "second", name: "Second", baseURL: "http://localhost:1234/v1",
+            model: "model-b", apiKeyRef: "second-api",
+            summarizeSystemPrompt: "summary", summarizeUserPrompt: "{text}",
+            translateSystemPrompt: "translate", translateUserPrompt: "{text}"
+        )
+        viewModel.config.presets = [first, second]
+        viewModel.config.activePresetId = first.id
+        viewModel.config.appProfiles = [
+            "clipmind": AppProfile(activePresetId: second.id)
+        ]
+
+        viewModel.deletePreset(second.id)
+
+        XCTAssertEqual(viewModel.config.appProfiles["clipmind"], AppProfile(activePresetId: ""))
+    }
 }
 
 @MainActor

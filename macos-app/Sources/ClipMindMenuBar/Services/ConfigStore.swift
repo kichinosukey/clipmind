@@ -44,6 +44,12 @@ struct ConfigStore {
         guard config.presets.contains(where: { $0.id == config.activePresetId }) else {
             throw ConfigStoreError.invalid("Active preset is missing")
         }
+        let presetIds = Set(config.presets.map(\.id))
+        for appProfile in config.appProfiles.values where !appProfile.activePresetId.isEmpty {
+            guard presetIds.contains(appProfile.activePresetId) else {
+                throw ConfigStoreError.invalid("App profile preset is missing")
+            }
+        }
         let supported = Set(["discord", "slack"])
         guard Set(config.shared.enabledDestinations).count == config.shared.enabledDestinations.count else {
             throw ConfigStoreError.invalid("Destinations must be unique")

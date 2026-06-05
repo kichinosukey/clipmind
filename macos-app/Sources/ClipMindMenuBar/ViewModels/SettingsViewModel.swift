@@ -2,9 +2,19 @@ import Foundation
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
+    struct SupportedApp: Identifiable, Equatable {
+        var id: String
+        var name: String
+    }
+
     @Published var config: ClipMindConfig
     @Published var errorMessage: String?
     @Published var discoveredModels: [String] = []
+
+    let supportedApps = [
+        SupportedApp(id: "clipmind", name: "ClipMind"),
+        SupportedApp(id: "meeting-summary-local-llm", name: "Meeting Summary")
+    ]
 
     private let store: ConfigStore
     private let secrets: SecretStoring
@@ -27,6 +37,15 @@ final class SettingsViewModel: ObservableObject {
 
     func selectPreset(_ id: String) {
         config.activePresetId = id
+        save()
+    }
+
+    func appPresetId(for appId: String) -> String {
+        config.appProfiles[appId]?.activePresetId ?? ""
+    }
+
+    func setAppPresetId(_ presetId: String, for appId: String) {
+        config.appProfiles[appId] = AppProfile(activePresetId: presetId)
         save()
     }
 
@@ -60,6 +79,9 @@ final class SettingsViewModel: ObservableObject {
         }
         config.presets.removeAll { $0.id == id }
         if config.activePresetId == id { config.activePresetId = config.presets[0].id }
+        for (appId, appProfile) in config.appProfiles where appProfile.activePresetId == id {
+            config.appProfiles[appId] = AppProfile(activePresetId: "")
+        }
         save()
     }
 
