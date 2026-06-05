@@ -135,19 +135,25 @@ Chrome を完全に再起動すると、YouTube ページまたは YouTube リ�
       "name": "Quality",
       "baseURL": "http://localhost:1234/v1",
       "model": "model-name",
-      "apiKeyRef": "preset-quality-api-key",
-      "summarizeSystemPrompt": "Summarize the transcript.",
-      "summarizeUserPrompt": "{text}",
-      "translateSystemPrompt": "Translate the summary into Japanese.",
-      "translateUserPrompt": "{text}"
+      "apiKeyRef": "preset-quality-api-key"
     }
   ],
   "appProfiles": {
     "clipmind": {
-      "activePresetId": "quality"
+      "activePresetId": "quality",
+      "settings": {
+        "summarizeSystemPrompt": "Summarize the transcript.",
+        "summarizeUserPrompt": "{text}",
+        "translateSystemPrompt": "Translate the summary into Japanese.",
+        "translateUserPrompt": "{text}"
+      }
     },
     "meeting-summary-local-llm": {
-      "activePresetId": ""
+      "activePresetId": "",
+      "settings": {
+        "timeout": 120,
+        "contextLength": 8192
+      }
     }
   },
   "shared": {
