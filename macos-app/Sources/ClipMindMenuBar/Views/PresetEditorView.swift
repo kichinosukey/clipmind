@@ -11,7 +11,7 @@ struct PresetEditorView: View {
             }
             .frame(width: 180)
             VStack(alignment: .leading) {
-                Text("LLM presets are shared by ClipMind and other personal local AI tools.")
+                Text("LLM presets are shared connection settings. App-specific prompts and limits live under Apps.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if let index = settings.config.presets.firstIndex(where: {
@@ -26,14 +26,6 @@ struct PresetEditorView: View {
                         }
                     }
                     SecureField("API key", text: $apiKey)
-                    Text("Summary system prompt")
-                    TextEditor(text: clipMindPromptBinding(\.summarizeSystemPrompt))
-                    Text("Summary user prompt")
-                    TextEditor(text: clipMindPromptBinding(\.summarizeUserPrompt))
-                    Text("Translation system prompt")
-                    TextEditor(text: clipMindPromptBinding(\.translateSystemPrompt))
-                    Text("Translation user prompt")
-                    TextEditor(text: clipMindPromptBinding(\.translateUserPrompt))
                     HStack {
                         Button("Test Connection") { Task { await settings.discoverModels() } }
                         Button("Save API Key") {
@@ -56,23 +48,5 @@ struct PresetEditorView: View {
                 if let error = settings.errorMessage { Text(error).foregroundStyle(.red) }
             }.padding()
         }
-    }
-
-    private func clipMindPromptBinding(_ keyPath: WritableKeyPath<AppProfileSettings, String?>) -> Binding<String> {
-        Binding(
-            get: {
-                settings.config.appProfiles["clipmind"]?.settings?[keyPath: keyPath] ?? ""
-            },
-            set: { value in
-                var profile = settings.config.appProfiles["clipmind"] ?? AppProfile(
-                    activePresetId: settings.config.activePresetId,
-                    settings: .defaultClipMind
-                )
-                var appSettings = profile.settings ?? .defaultClipMind
-                appSettings[keyPath: keyPath] = value
-                profile.settings = appSettings
-                settings.config.appProfiles["clipmind"] = profile
-            }
-        )
     }
 }
