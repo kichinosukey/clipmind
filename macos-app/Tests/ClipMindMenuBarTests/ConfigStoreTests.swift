@@ -91,25 +91,24 @@ final class ConfigStoreTests: XCTestCase {
     }
 
     @MainActor
-    func testDeletePresetClearsAppSpecificReference() {
-        let viewModel = SettingsViewModel()
-        let first = Preset(
-            id: "first", name: "First", baseURL: "http://localhost:1234/v1",
-            model: "model-a", apiKeyRef: "first-api",
-            summarizeSystemPrompt: "summary", summarizeUserPrompt: "{text}",
-            translateSystemPrompt: "translate", translateUserPrompt: "{text}"
-        )
+    func testDeletePresetClearsAppSpecificReference() throws {
+        var (config, root) = try validConfig()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = ConfigStore(configURL: root.appendingPathComponent("config.json"))
+        let viewModel = SettingsViewModel(store: store)
+        let first = try XCTUnwrap(config.presets.first)
         let second = Preset(
             id: "second", name: "Second", baseURL: "http://localhost:1234/v1",
             model: "model-b", apiKeyRef: "second-api",
             summarizeSystemPrompt: "summary", summarizeUserPrompt: "{text}",
             translateSystemPrompt: "translate", translateUserPrompt: "{text}"
         )
-        viewModel.config.presets = [first, second]
-        viewModel.config.activePresetId = first.id
-        viewModel.config.appProfiles = [
+        config.presets.append(second)
+        config.activePresetId = first.id
+        config.appProfiles = [
             "clipmind": AppProfile(activePresetId: second.id)
         ]
+        viewModel.config = config
 
         viewModel.deletePreset(second.id)
 
