@@ -27,13 +27,13 @@ struct PresetEditorView: View {
                     }
                     SecureField("API key", text: $apiKey)
                     Text("Summary system prompt")
-                    TextEditor(text: $settings.config.presets[index].summarizeSystemPrompt)
+                    TextEditor(text: clipMindPromptBinding(\.summarizeSystemPrompt))
                     Text("Summary user prompt")
-                    TextEditor(text: $settings.config.presets[index].summarizeUserPrompt)
+                    TextEditor(text: clipMindPromptBinding(\.summarizeUserPrompt))
                     Text("Translation system prompt")
-                    TextEditor(text: $settings.config.presets[index].translateSystemPrompt)
+                    TextEditor(text: clipMindPromptBinding(\.translateSystemPrompt))
                     Text("Translation user prompt")
-                    TextEditor(text: $settings.config.presets[index].translateUserPrompt)
+                    TextEditor(text: clipMindPromptBinding(\.translateUserPrompt))
                     HStack {
                         Button("Test Connection") { Task { await settings.discoverModels() } }
                         Button("Save API Key") {
@@ -56,5 +56,23 @@ struct PresetEditorView: View {
                 if let error = settings.errorMessage { Text(error).foregroundStyle(.red) }
             }.padding()
         }
+    }
+
+    private func clipMindPromptBinding(_ keyPath: WritableKeyPath<AppProfileSettings, String?>) -> Binding<String> {
+        Binding(
+            get: {
+                settings.config.appProfiles["clipmind"]?.settings?[keyPath: keyPath] ?? ""
+            },
+            set: { value in
+                var profile = settings.config.appProfiles["clipmind"] ?? AppProfile(
+                    activePresetId: settings.config.activePresetId,
+                    settings: .defaultClipMind
+                )
+                var appSettings = profile.settings ?? .defaultClipMind
+                appSettings[keyPath: keyPath] = value
+                profile.settings = appSettings
+                settings.config.appProfiles["clipmind"] = profile
+            }
+        )
     }
 }

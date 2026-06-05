@@ -45,7 +45,8 @@ final class SettingsViewModel: ObservableObject {
     }
 
     func setAppPresetId(_ presetId: String, for appId: String) {
-        config.appProfiles[appId] = AppProfile(activePresetId: presetId)
+        let settings = config.appProfiles[appId]?.settings
+        config.appProfiles[appId] = AppProfile(activePresetId: presetId, settings: settings)
         save()
     }
 
@@ -53,13 +54,10 @@ final class SettingsViewModel: ObservableObject {
         let id = UUID().uuidString.lowercased()
         config.presets.append(Preset(
             id: id, name: "New Preset", baseURL: "http://localhost:1234/v1",
-            model: "", apiKeyRef: "preset-\(id)-api-key",
-            summarizeSystemPrompt: "Summarize the transcript.",
-            summarizeUserPrompt: "{text}",
-            translateSystemPrompt: "Translate the summary into Japanese.",
-            translateUserPrompt: "{text}"
+            model: "", apiKeyRef: "preset-\(id)-api-key"
         ))
         config.activePresetId = id
+        config.appProfiles["clipmind"] = AppProfile(activePresetId: id, settings: .defaultClipMind)
     }
 
     func duplicatePreset(_ source: Preset) {
@@ -80,7 +78,7 @@ final class SettingsViewModel: ObservableObject {
         config.presets.removeAll { $0.id == id }
         if config.activePresetId == id { config.activePresetId = config.presets[0].id }
         for (appId, appProfile) in config.appProfiles where appProfile.activePresetId == id {
-            config.appProfiles[appId] = AppProfile(activePresetId: "")
+            config.appProfiles[appId] = AppProfile(activePresetId: "", settings: appProfile.settings)
         }
         save()
     }

@@ -17,10 +17,11 @@ final class ConfigStoreTests: XCTestCase {
             activePresetId: id,
             presets: [Preset(
                 id: id, name: "Quality", baseURL: "http://localhost:1234/v1",
-                model: "model-a", apiKeyRef: "quality-api",
-                summarizeSystemPrompt: "system", summarizeUserPrompt: "{text}",
-                translateSystemPrompt: "system", translateUserPrompt: "{text}"
+                model: "model-a", apiKeyRef: "quality-api"
             )],
+            appProfiles: [
+                "clipmind": AppProfile(activePresetId: id, settings: .defaultClipMind)
+            ],
             shared: SharedSettings(
                 whisperBinaryPath: binary.path, whisperModelPath: model.path,
                 outputRoot: root.path, enabledDestinations: [],
@@ -73,7 +74,7 @@ final class ConfigStoreTests: XCTestCase {
         var (config, root) = try validConfig()
         defer { try? FileManager.default.removeItem(at: root) }
         config.appProfiles = [
-            "clipmind": AppProfile(activePresetId: config.activePresetId),
+            "clipmind": AppProfile(activePresetId: config.activePresetId, settings: .defaultClipMind),
             "meeting-summary-local-llm": AppProfile(activePresetId: "")
         ]
 
@@ -99,9 +100,7 @@ final class ConfigStoreTests: XCTestCase {
         let first = try XCTUnwrap(config.presets.first)
         let second = Preset(
             id: "second", name: "Second", baseURL: "http://localhost:1234/v1",
-            model: "model-b", apiKeyRef: "second-api",
-            summarizeSystemPrompt: "summary", summarizeUserPrompt: "{text}",
-            translateSystemPrompt: "translate", translateUserPrompt: "{text}"
+            model: "model-b", apiKeyRef: "second-api"
         )
         config.presets.append(second)
         config.activePresetId = first.id
@@ -122,9 +121,7 @@ final class SettingsViewModelTests: XCTestCase {
         let viewModel = SettingsViewModel()
         let source = Preset(
             id: "source", name: "Quality", baseURL: "http://localhost:1234/v1",
-            model: "model-a", apiKeyRef: "source-api",
-            summarizeSystemPrompt: "summary", summarizeUserPrompt: "{text}",
-            translateSystemPrompt: "translate", translateUserPrompt: "{text}"
+            model: "model-a", apiKeyRef: "source-api"
         )
         viewModel.config.presets = [source]
         viewModel.config.activePresetId = source.id

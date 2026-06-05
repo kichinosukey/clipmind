@@ -33,8 +33,6 @@ struct ConfigStore {
         }
         let requiredPresetFields: [(Preset) -> String] = [
             \.id, \.name, \.baseURL, \.model, \.apiKeyRef,
-            \.summarizeSystemPrompt, \.summarizeUserPrompt,
-            \.translateSystemPrompt, \.translateUserPrompt,
         ]
         guard config.presets.allSatisfy({ preset in
             requiredPresetFields.allSatisfy { !$0(preset).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }

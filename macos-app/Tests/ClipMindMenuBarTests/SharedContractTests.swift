@@ -18,7 +18,7 @@ final class SharedContractTests: XCTestCase {
         XCTAssertEqual(config.presets.first?.model, "model-a")
     }
 
-    func testPresetContractContainsExternalLLMFields() throws {
+    func testSharedPresetContractContainsOnlyExternalLLMFields() throws {
         let json = """
         {
           "schemaVersion": 1,
@@ -29,11 +29,7 @@ final class SharedContractTests: XCTestCase {
               "name": "Shared Local",
               "baseURL": "http://localhost:1234/v1",
               "model": "qwen3-8b-mlx",
-              "apiKeyRef": "preset-1-api-key",
-              "summarizeSystemPrompt": "",
-              "summarizeUserPrompt": "",
-              "translateSystemPrompt": "",
-              "translateUserPrompt": ""
+              "apiKeyRef": "preset-1-api-key"
             }
           ],
           "shared": {
@@ -54,7 +50,7 @@ final class SharedContractTests: XCTestCase {
         XCTAssertEqual(preset.apiKeyRef, "preset-1-api-key")
     }
 
-    func testDecodesConfigWithAppProfiles() throws {
+    func testDecodesLegacyPresetPromptsIntoClipMindAppSettings() throws {
         let json = """
         {
           "schemaVersion": 1,
@@ -66,18 +62,62 @@ final class SharedContractTests: XCTestCase {
               "baseURL": "http://localhost:1234/v1",
               "model": "qwen3-8b-mlx",
               "apiKeyRef": "preset-1-api-key",
-              "summarizeSystemPrompt": "",
-              "summarizeUserPrompt": "",
-              "translateSystemPrompt": "",
-              "translateUserPrompt": ""
+              "summarizeSystemPrompt": "summary system",
+              "summarizeUserPrompt": "summary {text}",
+              "translateSystemPrompt": "translate system",
+              "translateUserPrompt": "translate {text}"
             }
           ],
           "appProfiles": {
             "clipmind": {
               "activePresetId": "preset-1"
+            }
+          },
+          "shared": {
+            "whisperBinaryPath": "/opt/homebrew/bin/whisper-cli",
+            "whisperModelPath": "/tmp/ggml-base.en.bin",
+            "outputRoot": "/tmp/out",
+            "enabledDestinations": []
+          }
+        }
+        """.data(using: .utf8)!
+
+        let config = try JSONDecoder().decode(ClipMindConfig.self, from: json)
+        let settings = try XCTUnwrap(config.appProfiles["clipmind"]?.settings)
+
+        XCTAssertEqual(settings.summarizeSystemPrompt, "summary system")
+        XCTAssertEqual(settings.summarizeUserPrompt, "summary {text}")
+        XCTAssertEqual(settings.translateSystemPrompt, "translate system")
+        XCTAssertEqual(settings.translateUserPrompt, "translate {text}")
+    }
+
+    func testDecodesConfigWithAppProfiles() throws {
+        let json = """
+        {
+          "schemaVersion": 1,
+          "activePresetId": "preset-1",
+          "presets": [
+            {
+              "id": "preset-1",
+              "name": "Shared Local",
+              "baseURL": "http://localhost:1234/v1",
+              "model": "qwen3-8b-mlx",
+              "apiKeyRef": "preset-1-api-key"
+            }
+          ],
+          "appProfiles": {
+            "clipmind": {
+              "activePresetId": "preset-1",
+              "settings": {
+                "summarizeUserPrompt": "{text}"
+              }
             },
             "meeting-summary-local-llm": {
-              "activePresetId": ""
+              "activePresetId": "",
+              "settings": {
+                "timeout": 900,
+                "contextLength": 32768
+              }
             }
           },
           "shared": {
@@ -91,8 +131,11 @@ final class SharedContractTests: XCTestCase {
 
         let config = try JSONDecoder().decode(ClipMindConfig.self, from: json)
 
-        XCTAssertEqual(config.appProfiles["clipmind"], AppProfile(activePresetId: "preset-1"))
-        XCTAssertEqual(config.appProfiles["meeting-summary-local-llm"], AppProfile(activePresetId: ""))
+        XCTAssertEqual(config.appProfiles["clipmind"]?.activePresetId, "preset-1")
+        XCTAssertEqual(config.appProfiles["clipmind"]?.settings?.summarizeUserPrompt, "{text}")
+        XCTAssertEqual(config.appProfiles["meeting-summary-local-llm"]?.activePresetId, "")
+        XCTAssertEqual(config.appProfiles["meeting-summary-local-llm"]?.settings?.timeout, 900)
+        XCTAssertEqual(config.appProfiles["meeting-summary-local-llm"]?.settings?.contextLength, 32768)
     }
 
     func testDecodesSharedJobFixtures() throws {
