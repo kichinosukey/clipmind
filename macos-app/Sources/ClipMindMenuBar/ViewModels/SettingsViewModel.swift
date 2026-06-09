@@ -139,6 +139,19 @@ final class SettingsViewModel: ObservableObject {
         catch { errorMessage = String(describing: error) }
     }
 
+    func commitPresetAPIKey(for preset: Preset, value: String) {
+        guard !value.isEmpty else { return }
+        saveSecret(reference: preset.apiKeyRef, value: value)
+        persistConfig()
+    }
+
+    func commitDestinationSecret(reference: String, value: String, assignTo keyPath: WritableKeyPath<SharedSettings, String?>) {
+        guard !value.isEmpty else { return }
+        config.shared[keyPath: keyPath] = reference
+        saveSecret(reference: reference, value: value)
+        persistConfig()
+    }
+
     func discoverModels() async {
         guard let preset = activePreset else { return }
         do {
