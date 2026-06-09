@@ -38,6 +38,12 @@ struct AutoSaveSecureField: View {
 
     @FocusState private var isFocused: Bool
 
+    init(_ title: String, text: Binding<String>, onCommit: @escaping () -> Void) {
+        self.title = title
+        self._text = text
+        self.onCommit = onCommit
+    }
+
     var body: some View {
         SecureField(title, text: $text)
             .focused($isFocused)

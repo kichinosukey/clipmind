@@ -60,4 +60,20 @@ final class SettingsHubUITests: XCTestCase {
         let loaded = try store.load()
         XCTAssertEqual(loaded.presets.first?.name, "Quality")
     }
+
+    func testAddPresetSelectsNewPresetWithoutRequiringSaveButton() {
+        let viewModel = SettingsViewModel()
+        let source = Preset(
+            id: "source", name: "Quality", baseURL: "http://localhost:1234/v1",
+            model: "model-a", apiKeyRef: "source-api"
+        )
+        viewModel.config.presets = [source]
+        viewModel.config.activePresetId = source.id
+
+        viewModel.addPreset()
+        viewModel.persistConfig()
+
+        XCTAssertEqual(viewModel.config.presets.count, 2)
+        XCTAssertEqual(viewModel.config.activePresetId, viewModel.config.presets.last?.id)
+    }
 }

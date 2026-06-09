@@ -5,48 +5,92 @@ struct PresetEditorView: View {
     @State private var apiKey = ""
 
     var body: some View {
-        HStack {
-            List(selection: $settings.config.activePresetId) {
-                ForEach(settings.config.presets) { Text($0.name).tag($0.id) }
-            }
-            .frame(width: 180)
-            VStack(alignment: .leading) {
-                Text("LLM presets are shared connection settings. App-specific prompts and limits live under Apps.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if let index = settings.config.presets.firstIndex(where: {
-                    $0.id == settings.config.activePresetId
-                }) {
-                    TextField("Name", text: $settings.config.presets[index].name)
-                    TextField("Base URL", text: $settings.config.presets[index].baseURL)
-                    TextField("Model", text: $settings.config.presets[index].model)
-                    if !settings.discoveredModels.isEmpty {
-                        Picker("Discovered model", selection: $settings.config.presets[index].model) {
-                            ForEach(settings.discoveredModels, id: \.self) { Text($0).tag($0) }
-                        }
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 0) {
+                List(selection: $settings.config.activePresetId) {
+                    ForEach(settings.config.presets) { preset in
+                        Text(preset.name)
+                            .tag(preset.id)
+                            .contextMenu {
+                                Button("Duplicate") { settings.duplicatePreset(preset) }
+                                Button("Delete…", role: .destructive) {
+                                    settings.deletePreset(preset.id)
+                                }
+                            }
                     }
-                    SecureField("API key", text: $apiKey)
-                    HStack {
-                        Button("Test Connection") { Task { await settings.discoverModels() } }
-                        Button("Save API Key") {
-                            settings.saveSecret(
-                                reference: settings.config.presets[index].apiKeyRef,
-                                value: apiKey
-                            )
-                            apiKey = ""
-                        }
-                        Button("Save") { settings.save() }
-                        Button("Duplicate") {
-                            settings.duplicatePreset(settings.config.presets[index])
-                        }
-                        Button("Delete") { settings.deletePreset(settings.config.presets[index].id) }
-                    }
-                } else {
-                    Button("Create first preset") { settings.addPreset() }
                 }
-                Button("Add Preset") { settings.addPreset() }
-                if let error = settings.errorMessage { Text(error).foregroundStyle(.red) }
-            }.padding()
+                .frame(width: 180)
+                .overlay(alignment: .topTrailing) {
+                    Button(action: settings.addPreset) {
+                        Image(systemName: "plus")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Add Preset")
+                    .padding(8)
+                }
+
+                if let index = selectedPresetIndex {
+                    Form {
+                        Section {
+                            Text("LLM presets are shared connection settings. App-specific prompts and limits live under Apps.")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Section("Connection") {
+                            AutoSaveTextField("Name", text: $settings.config.presets[index].name) {
+                                settings.persistConfig()
+                            }
+                            AutoSaveTextField("Base URL", text: $settings.config.presets[index].baseURL) {
+                                settings.persistConfig()
+                            }
+                            AutoSaveTextField("Model", text: $settings.config.presets[index].model) {
+                                settings.persistConfig()
+                            }
+                            if !settings.discoveredModels.isEmpty {
+                                Picker("Discovered model", selection: $settings.config.presets[index].model) {
+                                    ForEach(settings.discoveredModels, id: \.self) { Text($0).tag($0) }
+                                }
+                                .onChange(of: settings.config.presets[index].model) { _ in
+                                    settings.persistConfig()
+                                }
+                            }
+                            AutoSaveSecureField("API key", text: $apiKey) {
+                                settings.commitPresetAPIKey(for: settings.config.presets[index], value: apiKey)
+                                apiKey = ""
+                            }
+                        }
+
+                        Section {
+                            Button("接続を確認") {
+                                Task { await settings.discoverModels() }
+                            }
+                            .buttonStyle(.link)
+                        }
+                    }
+                    .formStyle(.grouped)
+                    .padding()
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary)
+                        Text("No Preset Selected")
+                            .font(.headline)
+                        Text("Create a preset with the plus button in the sidebar.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+            if let error = settings.errorMessage {
+                Text(error).foregroundStyle(.red).padding()
+            }
         }
+    }
+
+    private var selectedPresetIndex: Int? {
+        settings.config.presets.firstIndex { $0.id == settings.config.activePresetId }
     }
 }
