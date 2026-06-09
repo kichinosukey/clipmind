@@ -10,6 +10,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var config: ClipMindConfig
     @Published var errorMessage: String?
     @Published var discoveredModels: [String] = []
+    @Published var selectedSettingsTab: SettingsTab = .llmPresets
 
     let supportedApps = [
         SupportedApp(id: "clipmind", name: "ClipMind"),
@@ -65,6 +66,26 @@ final class SettingsViewModel: ObservableObject {
 
     func appPresetId(for appId: String) -> String {
         config.appProfiles[appId]?.activePresetId ?? ""
+    }
+
+    func openSettings(tab: SettingsTab) {
+        selectedSettingsTab = tab
+    }
+
+    func persistConfig() {
+        save()
+    }
+
+    func presetDisplayName(for appId: String) -> String {
+        let presetId = appPresetId(for: appId)
+        guard !presetId.isEmpty,
+              let preset = config.presets.first(where: { $0.id == presetId }) else {
+            if let global = config.presets.first(where: { $0.id == config.activePresetId }) {
+                return global.name
+            }
+            return "Default"
+        }
+        return preset.name
     }
 
     func setAppPresetId(_ presetId: String, for appId: String) {
