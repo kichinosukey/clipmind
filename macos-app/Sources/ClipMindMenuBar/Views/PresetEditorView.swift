@@ -8,7 +8,7 @@ struct PresetEditorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 0) {
-                List(selection: $settings.config.activePresetId) {
+                List(selection: activePresetSelection) {
                     ForEach(settings.config.presets) { preset in
                         Text(preset.name)
                             .tag(preset.id)
@@ -107,6 +107,13 @@ struct PresetEditorView: View {
         } message: { preset in
             Text("“\(preset.name)” will be removed. App profiles using this preset will fall back to the global default.")
         }
+    }
+
+    private var activePresetSelection: Binding<String> {
+        Binding(
+            get: { settings.config.activePresetId },
+            set: { settings.selectPreset($0) }
+        )
     }
 
     private var selectedPresetIndex: Int? {

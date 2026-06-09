@@ -40,6 +40,7 @@ struct MenuContentView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityHint("Opens Settings on the Activity tab")
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
 
@@ -60,7 +61,7 @@ struct MenuContentView: View {
     }
 
     private var activitySummary: String {
-        let running = "実行中: \(jobs.activeCount)"
+        let running = "実行中 \(jobs.activeCount)"
         if let recent = jobs.latestTerminalJob {
             let title = recent.title ?? recent.sourceURL
             return "\(running)  ·  直近: \(recent.stage.label) \(title)"

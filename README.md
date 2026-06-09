@@ -80,7 +80,7 @@ swift run --package-path macos-app ClipMindMenuBar
 1. LLM Presets で OpenAI 互換 API の Base URL とモデルを設定する
 2. API key を保存する
 3. Apps で ClipMind / Meeting Summary それぞれに使う LLM プリセットを選び、ClipMind の要約・翻訳プロンプトや Meeting Summary の上限値を設定する
-4. Shared で `whisper-cli`、Whisper モデル、出力先の絶対パスを設定する
+4. Apps > ClipMind > Runtime で `whisper-cli`、Whisper モデル、出力先の絶対パスを設定する
 5. 必要なら Discord / Slack を有効化し、Webhook を保存する
 
 旧 `.env` は自動読込・自動移行されません。値を確認しながら Menu Bar アプリへ手作業で移してください。

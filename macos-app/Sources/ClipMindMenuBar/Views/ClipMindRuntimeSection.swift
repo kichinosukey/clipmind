@@ -17,9 +17,6 @@ struct ClipMindRuntimeSection: View {
                 settings.persistConfig()
             }
             Toggle("Discord", isOn: destination("discord"))
-                .onChange(of: settings.config.shared.enabledDestinations) { _ in
-                    settings.persistConfig()
-                }
             AutoSaveSecureField("Discord webhook", text: $discordWebhook) {
                 settings.commitDestinationSecret(
                     reference: "destination-discord-webhook",
@@ -29,9 +26,6 @@ struct ClipMindRuntimeSection: View {
                 discordWebhook = ""
             }
             Toggle("Slack", isOn: destination("slack"))
-                .onChange(of: settings.config.shared.enabledDestinations) { _ in
-                    settings.persistConfig()
-                }
             AutoSaveSecureField("Slack webhook", text: $slackWebhook) {
                 settings.commitDestinationSecret(
                     reference: "destination-slack-webhook",
@@ -49,6 +43,7 @@ struct ClipMindRuntimeSection: View {
             set: { enabled in
                 settings.config.shared.enabledDestinations.removeAll { $0 == name }
                 if enabled { settings.config.shared.enabledDestinations.append(name) }
+                settings.persistConfig()
             }
         )
     }

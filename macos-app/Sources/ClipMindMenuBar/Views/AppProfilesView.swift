@@ -6,7 +6,7 @@ struct AppProfilesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Choose the LLM preset each app uses. App-specific settings stay with the app.")
+                Text("Choose the LLM preset each app uses. App-specific settings stay with the app. ClipMind runtime paths and destinations now live under ClipMind → Runtime.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
 
