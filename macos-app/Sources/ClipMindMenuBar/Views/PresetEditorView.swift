@@ -3,6 +3,7 @@ import SwiftUI
 struct PresetEditorView: View {
     @EnvironmentObject var settings: SettingsViewModel
     @State private var apiKey = ""
+    @State private var presetPendingDeletion: Preset?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -14,7 +15,7 @@ struct PresetEditorView: View {
                             .contextMenu {
                                 Button("Duplicate") { settings.duplicatePreset(preset) }
                                 Button("Delete…", role: .destructive) {
-                                    settings.deletePreset(preset.id)
+                                    presetPendingDeletion = preset
                                 }
                             }
                     }
@@ -87,6 +88,24 @@ struct PresetEditorView: View {
             if let error = settings.errorMessage {
                 Text(error).foregroundStyle(.red).padding()
             }
+        }
+        .alert(
+            "Delete Preset?",
+            isPresented: Binding(
+                get: { presetPendingDeletion != nil },
+                set: { if !$0 { presetPendingDeletion = nil } }
+            ),
+            presenting: presetPendingDeletion
+        ) { preset in
+            Button("Delete", role: .destructive) {
+                settings.deletePreset(preset.id)
+                presetPendingDeletion = nil
+            }
+            Button("Cancel", role: .cancel) {
+                presetPendingDeletion = nil
+            }
+        } message: { preset in
+            Text("“\(preset.name)” will be removed. App profiles using this preset will fall back to the global default.")
         }
     }
 
