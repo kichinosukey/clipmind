@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 
+
 def test_shared_runtime_paths_use_application_support(tmp_path):
     home = tmp_path / "home"
     env = os.environ.copy()
@@ -15,20 +16,23 @@ def test_shared_runtime_paths_use_application_support(tmp_path):
             "-c",
             """
 from clipmind.paths import (
-    APPLICATION_SUPPORT_DIR,
+    CLIPMIND_SUPPORT_DIR,
     CONFIG_PATH,
+    CONFIG_SUPPORT_DIR,
     JOBS_DIR,
     KEYCHAIN_SERVICE,
     STATUS_DIR,
 )
 from pathlib import Path
 
-expected = Path.home() / "Library" / "Application Support" / "ClipMind"
-assert APPLICATION_SUPPORT_DIR == expected
-assert CONFIG_PATH == expected / "config.json"
-assert JOBS_DIR == expected / "jobs"
+config_hub = Path.home() / "Library" / "Application Support" / "ConfigHub"
+clipmind = Path.home() / "Library" / "Application Support" / "ClipMind"
+assert CONFIG_SUPPORT_DIR == config_hub
+assert CONFIG_PATH == config_hub / "config.json"
+assert CLIPMIND_SUPPORT_DIR == clipmind
+assert JOBS_DIR == clipmind / "jobs"
 assert STATUS_DIR == JOBS_DIR
-assert KEYCHAIN_SERVICE == "com.kichinosukey.clipmind"
+assert KEYCHAIN_SERVICE == "com.kichinosukey.confighub"
 """,
         ],
         capture_output=True,

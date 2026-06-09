@@ -2,7 +2,7 @@
 
 YouTube URL を Whisper.cpp で文字起こしし、OpenAI 互換 API で要約・翻訳して、必要に応じて Discord / Slack に投稿する macOS 向けツールです。
 
-設定は Menu Bar アプリで管理します。CLI、Alfred、Chrome 右クリックのどこから実行しても、Apps 設定で ClipMind に割り当てた LLM プリセットを使用します。割り当てが未設定ならグローバルのアクティブプリセットに戻ります。Menu Bar アプリを終了していても処理は実行できます。
+設定は外部アプリ [Config Hub](https://github.com/kichinosukey/confighub) で管理します。CLI、Alfred、Chrome 右クリックのどこから実行しても、Apps 設定で ClipMind に割り当てた LLM プリセットを使用します。割り当てが未設定ならグローバルのアクティブプリセットに戻ります。Config Hub を終了していても処理は実行できます。
 
 ## 構成
 
@@ -20,10 +20,12 @@ Python pipeline
   |-- OpenAI互換API 要約・翻訳
   `-- Discord / Slack
 
-Menu Bar app
+Config Hub (external)
   |-- プリセット・共通設定
-  |-- Keychain の秘密情報
-  `-- 実行状況
+  `-- Keychain の秘密情報
+
+ClipMind runtime
+  `-- 実行状況 (jobs/)
 ```
 
 ## 必要なもの
@@ -69,11 +71,7 @@ make
 ./models/download-ggml-model.sh base.en
 ```
 
-ClipMind の Menu Bar アプリを起動します。
-
-```bash
-swift run --package-path macos-app ClipMindMenuBar
-```
+[Config Hub](https://github.com/kichinosukey/confighub) をインストールして起動します。
 
 設定画面で次を手作業で入力して保存します。
 
@@ -83,15 +81,15 @@ swift run --package-path macos-app ClipMindMenuBar
 4. Apps > ClipMind > Runtime で `whisper-cli`、Whisper モデル、出力先の絶対パスを設定する
 5. 必要なら Discord / Slack を有効化し、Webhook を保存する
 
-旧 `.env` は自動読込・自動移行されません。値を確認しながら Menu Bar アプリへ手作業で移してください。
+旧 `.env` は自動読込・自動移行されません。値を確認しながら Config Hub へ手作業で移してください。
 
-通常設定は次に保存されます。
+通常設定は Config Hub の Application Support に保存されます。
 
 ```text
-~/Library/Application Support/ClipMind/config.json
+~/Library/Application Support/ConfigHub/config.json
 ```
 
-API key と Webhook は JSON には保存されず、macOS Keychain の service `com.kichinosukey.clipmind` に保存されます。
+API key と Webhook は JSON には保存されず、macOS Keychain の service `com.kichinosukey.confighub` に保存されます。
 
 ## 実行
 
@@ -99,7 +97,7 @@ API key と Webhook は JSON には保存されず、macOS Keychain の service 
 clipmind-run "https://www.youtube.com/watch?v=UF8uR6Z6KLc"
 ```
 
-リポジトリ直下からは `./clipmind-run URL` でも実行できます。処理中の状態は以下に書き込まれ、Menu Bar アプリで確認できます。
+リポジトリ直下からは `./clipmind-run URL` でも実行できます。処理中の状態は ClipMind の Application Support に書き込まれます。
 
 ```text
 ~/Library/Application Support/ClipMind/jobs/

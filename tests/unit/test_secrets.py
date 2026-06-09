@@ -13,7 +13,7 @@ def test_get_secret_uses_clipmind_service(mocker):
         return_value=subprocess.CompletedProcess([], 0, stdout="token\n", stderr=""),
     )
 
-    store = KeychainSecretStore(service="com.kichinosukey.clipmind")
+    store = KeychainSecretStore(service="com.kichinosukey.confighub")
 
     assert store.get("preset-main-api-key") == "token"
     run.assert_called_once_with(
@@ -21,7 +21,7 @@ def test_get_secret_uses_clipmind_service(mocker):
             "/usr/bin/security",
             "find-generic-password",
             "-s",
-            "com.kichinosukey.clipmind",
+            "com.kichinosukey.confighub",
             "-a",
             "preset-main-api-key",
             "-w",

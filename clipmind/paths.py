@@ -6,13 +6,14 @@ import re
 from pathlib import Path
 
 NATIVE_HOST_NAME = "com.clipmind.host"
-KEYCHAIN_SERVICE = "com.kichinosukey.clipmind"
+KEYCHAIN_SERVICE = "com.kichinosukey.confighub"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-APPLICATION_SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "ClipMind"
-CONFIG_PATH = APPLICATION_SUPPORT_DIR / "config.json"
-JOBS_DIR = APPLICATION_SUPPORT_DIR / "jobs"
+CONFIG_SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "ConfigHub"
+CONFIG_PATH = CONFIG_SUPPORT_DIR / "config.json"
+CLIPMIND_SUPPORT_DIR = Path.home() / "Library" / "Application Support" / "ClipMind"
+JOBS_DIR = CLIPMIND_SUPPORT_DIR / "jobs"
 
 NATIVE_HOST_DIR = PROJECT_ROOT / "native-host"
 NATIVE_HOST_SCRIPT = NATIVE_HOST_DIR / "clipmind_host.py"
