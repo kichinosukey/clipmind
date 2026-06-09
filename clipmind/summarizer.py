@@ -75,7 +75,22 @@ Summary:
 # ======================================================
 #  ライブラリモード: パイプラインから直接呼ぶ用
 # ======================================================
-MAX_CHUNK_CHARS = 8000  # ~2000 tokens — safe for 4096 n_ctx with prompt overhead
+DEFAULT_MAX_CHUNK_CHARS = 8000  # legacy default when contextLength is unset
+PROMPT_OVERHEAD_TOKENS = 2000
+CHARS_PER_TOKEN = 4
+MIN_CHUNK_CHARS = 2000
+MAX_CHUNK_CHARS_CAP = 120_000
+
+
+def max_chunk_chars(context_length: int | None) -> int:
+    """Derive transcript chunk size from the configured LM context window."""
+    if context_length is None:
+        return DEFAULT_MAX_CHUNK_CHARS
+    available_tokens = max(context_length - PROMPT_OVERHEAD_TOKENS, 512)
+    return max(
+        MIN_CHUNK_CHARS,
+        min(int(available_tokens * CHARS_PER_TOKEN), MAX_CHUNK_CHARS_CAP),
+    )
 
 
 def _call_llm(client: OpenAI, model: str, system_prompt: str, user_prompt: str) -> str:
@@ -91,7 +106,7 @@ def _call_llm(client: OpenAI, model: str, system_prompt: str, user_prompt: str) 
     return response.choices[0].message.content.strip()
 
 
-def _split_text(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
+def _split_text(text: str, max_chars: int = DEFAULT_MAX_CHUNK_CHARS) -> list[str]:
     """Split text into chunks at paragraph boundaries."""
     paragraphs = text.split("\n")
     chunks: list[str] = []
@@ -111,7 +126,13 @@ def _split_text(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
     return chunks
 
 
-def summarize_text(text: str, mode: str, preset: LLMPreset) -> str:
+def summarize_text(
+    text: str,
+    mode: str,
+    preset: LLMPreset,
+    *,
+    context_length: int | None = None,
+) -> str:
     """
     Summarize or translate given text content.
     Long texts are automatically split into chunks and summarized,
@@ -144,8 +165,12 @@ def summarize_text(text: str, mode: str, preset: LLMPreset) -> str:
         raise ValueError(f"Unsupported mode: {mode}")
     system_prompt, user_prompt_template = prompts[mode]
 
-    chunks = _split_text(text)
-    log(f"[summarizer] text length={len(text)}, chunks={len(chunks)}")
+    chunk_limit = max_chunk_chars(context_length)
+    chunks = _split_text(text, max_chars=chunk_limit)
+    log(
+        f"[summarizer] text length={len(text)}, chunks={len(chunks)}, "
+        f"chunk_limit={chunk_limit}, context_length={context_length}"
+    )
 
     if len(chunks) <= 1:
         try:
@@ -231,7 +256,12 @@ def main():
         handle_error("Input file is empty")
 
     # ==== モデル実行 ====
-    output_text = summarize_text(text, args.mode, config.preset)
+    output_text = summarize_text(
+        text,
+        args.mode,
+        config.preset,
+        context_length=config.context_length,
+    )
 
     # ==== 出力 ====
     try:

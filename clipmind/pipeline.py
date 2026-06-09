@@ -175,7 +175,12 @@ def run_pipeline(
         if reporter:
             reporter.transition(JobStage.SUMMARIZING)
         log("Summarizing in English...")
-        summary_en = summarize_text(text, "summarize", config.preset)
+        summary_en = summarize_text(
+            text,
+            "summarize",
+            config.preset,
+            context_length=config.context_length,
+        )
         log(f"DEBUG: summary_en length = {len(summary_en)}")
 
         summary_en_path = txt_out.replace(".txt", "_summary.txt")
@@ -189,7 +194,12 @@ def run_pipeline(
         if reporter:
             reporter.transition(JobStage.TRANSLATING)
         log("Translating to Japanese...")
-        summary_ja = summarize_text(summary_en, "translate", config.preset)
+        summary_ja = summarize_text(
+            summary_en,
+            "translate",
+            config.preset,
+            context_length=config.context_length,
+        )
         log(f"DEBUG: summary_ja length = {len(summary_ja)}")
 
         summary_ja_path = txt_out.replace(".txt", "_summary_ja.txt")

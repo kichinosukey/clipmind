@@ -4,7 +4,16 @@ from dataclasses import replace
 
 import pytest
 
-from clipmind.summarizer import summarize_text
+from clipmind.summarizer import max_chunk_chars, summarize_text
+
+
+class TestMaxChunkChars:
+    def test_defaults_without_context_length(self):
+        assert max_chunk_chars(None) == 8000
+
+    def test_scales_with_context_length(self):
+        assert max_chunk_chars(32768) > max_chunk_chars(4096)
+        assert max_chunk_chars(4096) == 8384
 
 
 class TestSummarizeText:

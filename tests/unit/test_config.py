@@ -37,6 +37,29 @@ def use_missing_global_active_preset(data):
     data.update(activePresetId="missing")
 
 
+def test_load_runtime_config_reads_clipmind_context_length(tmp_path):
+    def mutate(data):
+        data["appProfiles"]["clipmind"]["settings"]["contextLength"] = 32768
+
+    runtime = load_runtime_config(
+        write_config(tmp_path, mutate),
+        FakeSecrets({"quality-api": "api-secret", "discord-hook": "discord-secret"}),
+    )
+
+    assert runtime.context_length == 32768
+
+
+def test_load_runtime_config_rejects_invalid_clipmind_context_length(tmp_path):
+    def mutate(data):
+        data["appProfiles"]["clipmind"]["settings"]["contextLength"] = True
+
+    with pytest.raises(ConfigError, match="contextLength"):
+        load_runtime_config(
+            write_config(tmp_path, mutate),
+            FakeSecrets({"quality-api": "api-secret", "discord-hook": "discord-secret"}),
+        )
+
+
 def test_load_runtime_config_resolves_active_preset_and_secrets(tmp_path):
     runtime = load_runtime_config(
         write_config(tmp_path),

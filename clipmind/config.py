@@ -31,6 +31,9 @@ class LLMPreset:
     translate_user_prompt: str
 
 
+_INVALID_OPTIONAL_INT = object()
+
+
 @dataclass(frozen=True)
 class RuntimeConfig:
     preset: LLMPreset
@@ -40,6 +43,7 @@ class RuntimeConfig:
     default_destinations: tuple[str, ...]
     discord_webhook: str | None
     slack_webhook: str | None
+    context_length: int | None = None
 
     @property
     def secrets(self) -> list[str]:
@@ -60,6 +64,18 @@ def _required_text(data: dict[str, Any], field: str, context: str = "") -> str:
         prefix = f"{context}." if context else ""
         raise ConfigError(f"Required configuration field is missing: {prefix}{field}")
     return value
+
+
+def _optional_int(value: Any) -> int | None | object:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return _INVALID_OPTIONAL_INT
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return _INVALID_OPTIONAL_INT
 
 
 def _optional_reference(data: dict[str, Any], field: str) -> str | None:
@@ -224,6 +240,15 @@ def load_runtime_config(
         **preset_values,
     )
 
+    context_length = None
+    if clipmind_settings is not None:
+        context_length = _optional_int(clipmind_settings.get("contextLength"))
+        if context_length is _INVALID_OPTIONAL_INT:
+            raise ConfigError(
+                "Configuration field appProfiles.clipmind.settings.contextLength "
+                "must be an integer"
+            )
+
     return RuntimeConfig(
         preset=llm_preset,
         whisper_binary_path=str(
@@ -244,4 +269,5 @@ def load_runtime_config(
             if "slack" in destinations and slack_ref
             else _load_optional_secret(store, slack_ref)
         ),
+        context_length=context_length,
     )
