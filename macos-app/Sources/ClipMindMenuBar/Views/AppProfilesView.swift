@@ -4,51 +4,70 @@ struct AppProfilesView: View {
     @EnvironmentObject var settings: SettingsViewModel
 
     var body: some View {
-        Form {
-            Text("Choose the LLM preset each app uses. App-specific settings stay with the app.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Choose the LLM preset each app uses. App-specific settings stay with the app.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
 
-            Section("ClipMind") {
-                Picker("LLM preset", selection: appPresetBinding(for: "clipmind")) {
-                    Text("Default").tag("")
-                    ForEach(settings.config.presets) { preset in
-                        Text(preset.name).tag(preset.id)
+                GroupBox("ClipMind") {
+                    Form {
+                        Section("LLM") {
+                            Picker("LLM preset", selection: appPresetBinding(for: "clipmind")) {
+                                Text("Default").tag("")
+                                ForEach(settings.config.presets) { preset in
+                                    Text(preset.name).tag(preset.id)
+                                }
+                            }
+                        }
+                        Section("Prompts") {
+                            AutoSaveTextField("Summary system prompt", text: clipMindSettingsBinding(\.summarizeSystemPrompt)) {
+                                settings.persistConfig()
+                            }
+                            AutoSaveTextField("Summary user prompt", text: clipMindSettingsBinding(\.summarizeUserPrompt)) {
+                                settings.persistConfig()
+                            }
+                            AutoSaveTextField("Translation system prompt", text: clipMindSettingsBinding(\.translateSystemPrompt)) {
+                                settings.persistConfig()
+                            }
+                            AutoSaveTextField("Translation user prompt", text: clipMindSettingsBinding(\.translateUserPrompt)) {
+                                settings.persistConfig()
+                            }
+                        }
+                        Section("Runtime") {
+                            ClipMindRuntimeSection()
+                        }
                     }
+                    .formStyle(.grouped)
                 }
-                TextField(
-                    "Summary system prompt",
-                    text: clipMindSettingsBinding(\.summarizeSystemPrompt)
-                )
-                TextField(
-                    "Summary user prompt",
-                    text: clipMindSettingsBinding(\.summarizeUserPrompt)
-                )
-                TextField(
-                    "Translation system prompt",
-                    text: clipMindSettingsBinding(\.translateSystemPrompt)
-                )
-                TextField(
-                    "Translation user prompt",
-                    text: clipMindSettingsBinding(\.translateUserPrompt)
-                )
-            }
 
-            Section("Meeting Summary") {
-                Picker("LLM preset", selection: appPresetBinding(for: "meeting-summary-local-llm")) {
-                    Text("Default").tag("")
-                    ForEach(settings.config.presets) { preset in
-                        Text(preset.name).tag(preset.id)
+                GroupBox("Meeting Summary") {
+                    Form {
+                        Section("LLM") {
+                            Picker("LLM preset", selection: appPresetBinding(for: "meeting-summary-local-llm")) {
+                                Text("Default").tag("")
+                                ForEach(settings.config.presets) { preset in
+                                    Text(preset.name).tag(preset.id)
+                                }
+                            }
+                        }
+                        Section("Limits") {
+                            AutoSaveTextField("Timeout", text: meetingSummaryIntBinding(\.timeout)) {
+                                settings.persistConfig()
+                            }
+                            AutoSaveTextField("Context length", text: meetingSummaryIntBinding(\.contextLength)) {
+                                settings.persistConfig()
+                            }
+                        }
                     }
+                    .formStyle(.grouped)
                 }
-                TextField("Timeout", text: meetingSummaryIntBinding(\.timeout))
-                TextField("Context length", text: meetingSummaryIntBinding(\.contextLength))
             }
-
-            Button("Save") { settings.save() }
-            if let error = settings.errorMessage { Text(error).foregroundStyle(.red) }
+            .padding()
         }
-        .padding()
+        if let error = settings.errorMessage {
+            Text(error).foregroundStyle(.red).padding()
+        }
     }
 
     private func appPresetBinding(for appId: String) -> Binding<String> {
